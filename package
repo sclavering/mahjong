@@ -1,0 +1,2 @@
+zip -ur0 mozjong.zip code
+zip -ur9 mozjong.xpi mozjong.zip install.rdf chrome.manifest

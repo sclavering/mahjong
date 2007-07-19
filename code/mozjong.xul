@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+
+<!-- <!DOCTYPE overlay SYSTEM "chrome://mozjong/locale/"> -->
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    width="300"
+    height="300"
+    >
+
+<script src="ui.js"/>
+<script src="tile.js"/>
+<script src="layouts.js"/>
+<script src="main.js"/>
+
+<label value="hello"/>
+
+</window>
