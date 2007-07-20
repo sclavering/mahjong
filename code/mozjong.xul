@@ -10,7 +10,7 @@
     >
 
 <script src="ui.js"/>
-<script src="tile.js"/>
+<script type="application/javascript;version=1.7" src="tile.js"/>
 <script src="layouts.js"/>
 <script src="main.js"/>
 

@@ -38,20 +38,24 @@ Tile.prototype = {
   }
 }
 
+function irange(N) {
+  for(var i = 0; i < N; ++i) yield i;
+}
+
 
 // Template is a z-y-x indexed array of bools indicating tile positions
 function Grid(templateArray) {
   const ta = templateArray;
   const all = []; // all tiles
-  function maketile(x, y, z) { return ta[z][y][x] ? all.push(new Tile(x, y, z)) : null; }
-  this._grid = [[[maketile(x, y, z) for(x in ta[z][y])] for(y in ta[z])] for(z in ta)];
+  const d = ta.length, h = ta[0].length, w = ta[0][0].length;
+  function maketile(x, y, z) { return ta[z][y][x] ? (all[all.length] = new Tile(x, y, z)) : null; }
+  const g = this._grid = [[[maketile(x, y, z) for(x in irange(w))] for(y in irange(h))] for(z in irange(d))];
   // set up the tiles' .left etc. fields.  don't use for-in because it gives indices as strings
-  const g = this._grid, d = g.length, h = g[0].length, w = g[0][0].length;
   for each(var t in all) {
     // a full tile's width to the left, and optionally up or down half a tile's height
-    this._recordTileAsAdjacent(t, 'left', 'numnumRightBlockers', -2, -1, 0);
-    this._recordTileAsAdjacent(t, 'left', 'numnumRightBlockers', -2,  0, 0);
-    this._recordTileAsAdjacent(t, 'left', 'numnumRightBlockers', -2, +1, 0);
+    this._recordTileAsAdjacent(t, 'left', 'numRightBlockers', -2, -1, 0);
+    this._recordTileAsAdjacent(t, 'left', 'numRightBlockers', -2,  0, 0);
+    this._recordTileAsAdjacent(t, 'left', 'numRightBlockers', -2, +1, 0);
     // as above, but to the right
     this._recordTileAsAdjacent(t, 'right', 'numLeftBlockers', +2, -1, 0);
     this._recordTileAsAdjacent(t, 'right', 'numLeftBlockers', +2,  0, 0);
@@ -67,6 +71,10 @@ function Grid(templateArray) {
     this._recordTileAsAdjacent(t, 'below', 'numAboveBlockers',  0, -1, -1);
     this._recordTileAsAdjacent(t, 'below', 'numAboveBlockers',  0,  0, -1);
   }
+
+  // decide which tiles are which
+  // xxx randomise, and ensure winnability
+  for(var i in all) all[i].value = i;
 }
 
 Grid.prototype = {
