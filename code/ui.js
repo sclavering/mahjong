@@ -34,11 +34,11 @@ const ui = {
     this._stack.width = pxwidth;
     this._stack.height = pxheight;
     window.sizeToContent();
+    this._stack.onclick = function(e) { ui.onclick(e); };
   },
 
   _drawTile: function(tile) {
     if(!tile) return;
-    dump("tile: "+tile+"\n");
     dump("drawing ("+tile.x+","+tile.y+","+tile.z+"): "+tile.value+" at (");
     dump(((tile.x + 1) * kTileHalfWidth) +","+ ((tile.y + 1) * kTileHalfHeight)+","+ kTileWidth+","+ kTileHeight+")\n");
     const ctx = this._contexts[tile.z];
@@ -51,5 +51,23 @@ const ui = {
     // draw the tile
     ctx.fillStyle = this._colours[tile.value];
     ctx.fillRect(x - kLayerXOffset, y - kLayerYOffset, kTileWidth, kTileHeight);
+  },
+
+
+  onclick: function(event) {
+    const pixelX = event.clientX - this._stack.boxObject.x;
+    const pixelY = event.clientY - this._stack.boxObject.y;
+    const g = grid._grid, depth = g.length;
+    for(var z = depth - 1; z >= 0; --z) {
+      // reverse the layer tile-shadow offsets
+      var layerPixelX = pixelX + z * kLayerXOffset;
+      var layerPixelY = pixelY + z * kLayerYOffset;
+      // conver to logical-tile coordinates.  -1 is to match the +1 in _drawTile()
+      var x = Math.floor(layerPixelX / kTileHalfWidth) - 1;
+      var y = Math.floor(layerPixelY / kTileHalfHeight) - 1;
+      dump("click: ("+pixelX+","+pixelY+") == ("+layerPixelX+","+layerPixelY+") in layer "+z);
+      dump(" -- logical tile ("+x+","+y+","+z+")\n");
+      if(grid.onTileClicked(x, y, z)) return;
+    }
   }
 }

@@ -92,5 +92,20 @@ Grid.prototype = {
     tileA.remove();
     tileB.remove();
     return true;
+  },
+
+  getTileAt: function(x, y, z) {
+    const g = this._grid;
+    return (g[z] && g[z][y] && g[z][y][x]) || null;
+  },
+
+  onTileClicked: function(x, y, z) {
+    alert("tile maybe clicked: ("+x+","+y+","+z+")");
+    // the provided coords may be for the right side or bottom half (or both) of the tile
+    const tile = this.getTileAt(x, y, z) || this.getTileAt(x, y - 1, z)
+        || this.getTileAt(x - 1, y, z) || this.getTileAt(x - 1, y - 1, z);
+    if(!tile) return false;
+    alert(" value="+tile.value+" free?"+tile.isFree);
+    return true;
   }
 }
