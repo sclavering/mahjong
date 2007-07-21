@@ -21,8 +21,8 @@ const ui = {
   // pass a z-y-x indexed array of Tile objects and nulls
   show: function(grid) {
     const d = grid.length, h = grid[0].length, w = grid[0][0].length;
-    const pxwidth = (w + 2) * kTileWidth;
-    const pxheight = (h + 2) * kTileHeight;
+    const pxwidth = (w + 2) * kTileHalfWidth;
+    const pxheight = (h + 2) * kTileHalfHeight;
     // we create an extra <canvas> just for drawing selected tiles in
     for(var z = 0; z != d + 1; ++z) {
       var canvas = document.createElementNS(HTMLns, "canvas");
