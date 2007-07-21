@@ -1,19 +1,22 @@
 const HTMLns = "http://www.w3.org/1999/xhtml";
 
-const kTileWidth = 30;
-const kTileHalfWidth = 15;
-const kTileHeight = 40;
-const kTileHalfHeight = 20;
-const kLayerXOffset = 2;
-const kLayerYOffset = 3;
+const kTileWidth = 56;
+const kTileHalfWidth = 28;
+const kTileHeight = 80;
+const kTileHalfHeight = 40;
+const kLayerXOffset = 4;
+const kLayerYOffset = 4;
 
 const ui = {
+  // <html:img>s for drawing
+  _images: {},
+
   init: function() {
     this._stack = document.getElementById("gamearea");
     this._contexts = []; // nsIDOMCanvasRenderingContext2D
+    const images = document.getElementById("html_img_elements");
+    for each(var el in images.childNodes) this._images[el.id] = el;
   },
-
-  _colours: ["red", "green", "blue", "yellow", "pink", "orange"],
 
   // pass a z-y-x indexed array of Tile objects and nulls
   show: function(grid) {
@@ -46,11 +49,10 @@ const ui = {
     const x = (tile.x + 1) * kTileHalfWidth - tile.z * kLayerXOffset;
     const y = (tile.y + 1) * kTileHalfHeight - tile.z * kLayerYOffset;
     // draw a shadow, badly
-    ctx.fillStyle = "rgba(128, 128, 128, 0.5)";
+    ctx.fillStyle = "rgba(128, 128, 128, 0.3)";
     ctx.fillRect(x, y, kTileWidth, kTileHeight);
     // draw the tile
-    ctx.fillStyle = this._colours[tile.value];
-    ctx.fillRect(x - kLayerXOffset, y - kLayerYOffset, kTileWidth, kTileHeight);
+    ctx.drawImage(this._images["tile-" + tile.value], x - kLayerXOffset, y - kLayerYOffset);
   },
 
 
