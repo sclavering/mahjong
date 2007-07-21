@@ -4,8 +4,8 @@ const kTileWidth = 56;
 const kTileHalfWidth = 28;
 const kTileHeight = 80;
 const kTileHalfHeight = 40;
-const kLayerXOffset = 4;
-const kLayerYOffset = 4;
+const kLayerXOffset = -4;
+const kLayerYOffset = -4;
 
 const ui = {
   // <html:img>s for drawing
@@ -23,13 +23,15 @@ const ui = {
     const d = grid.length, h = grid[0].length, w = grid[0][0].length;
     const pxwidth = (w + 2) * kTileWidth;
     const pxheight = (h + 2) * kTileHeight;
-    for(var z = 0; z != d; ++z) {
+    // we create an extra <canvas> just for drawing selected tiles in
+    for(var z = 0; z != d + 1; ++z) {
       var canvas = document.createElementNS(HTMLns, "canvas");
       this._stack.appendChild(canvas);
       canvas.width = pxwidth;
       canvas.height = pxheight;
       this._contexts[z] = canvas.getContext("2d");
     }
+    this._highlightContext = this._contexts.pop();
     for(z = 0; z != d; ++z)
       for(var y = 0; y != h; ++y)
         for(var x = 0; x != w; ++x)
@@ -45,14 +47,26 @@ const ui = {
     dump("drawing ("+tile.x+","+tile.y+","+tile.z+"): "+tile.value+" at (");
     dump(((tile.x + 1) * kTileHalfWidth) +","+ ((tile.y + 1) * kTileHalfHeight)+","+ kTileWidth+","+ kTileHeight+")\n");
     const ctx = this._contexts[tile.z];
-    // + 1 is for a border around the layout, and some space for layer offsets to use up
-    const x = (tile.x + 1) * kTileHalfWidth - tile.z * kLayerXOffset;
-    const y = (tile.y + 1) * kTileHalfHeight - tile.z * kLayerYOffset;
+    var [x, y] = this._getTileVisualCoords(tile);
     // draw a shadow, badly
     ctx.fillStyle = "rgba(128, 128, 128, 0.3)";
-    ctx.fillRect(x, y, kTileWidth, kTileHeight);
+    ctx.fillRect(x - kLayerXOffset, y - kLayerYOffset, kTileWidth, kTileHeight);
     // draw the tile
-    ctx.drawImage(this._images["tile-" + tile.value], x - kLayerXOffset, y - kLayerYOffset);
+    ctx.drawImage(this._images["tile-" + tile.value], x, y);
+  },
+
+  highlightTile: function(tile) {
+    const ctx = this._highlightContext;
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    var [x, y] = this._getTileVisualCoords(tile);
+    ctx.drawImage(this._images["selectedtile-" + tile.value], x, y)
+  },
+
+  _getTileVisualCoords: function(tile) {
+    // +1 to x/y gives a visual border and space for the layer offsets to use up
+    const x = (tile.x + 1) * kTileHalfWidth + (tile.z + 1) * kLayerXOffset;
+    const y = (tile.y + 1) * kTileHalfHeight + (tile.z + 1) * kLayerYOffset;
+    return [x, y];
   },
 
 
@@ -62,14 +76,14 @@ const ui = {
     const g = grid._grid, depth = g.length;
     for(var z = depth - 1; z >= 0; --z) {
       // reverse the layer tile-shadow offsets
-      var layerPixelX = pixelX + z * kLayerXOffset;
-      var layerPixelY = pixelY + z * kLayerYOffset;
+      var layerPixelX = pixelX - z * kLayerXOffset;
+      var layerPixelY = pixelY - z * kLayerYOffset;
       // conver to logical-tile coordinates.  -1 is to match the +1 in _drawTile()
       var x = Math.floor(layerPixelX / kTileHalfWidth) - 1;
       var y = Math.floor(layerPixelY / kTileHalfHeight) - 1;
       dump("click: ("+pixelX+","+pixelY+") == ("+layerPixelX+","+layerPixelY+") in layer "+z);
       dump(" -- logical tile ("+x+","+y+","+z+")\n");
-      if(grid.onTileClicked(x, y, z)) return;
+      if(grid.onTileClicked(x, y, z)) break;
     }
   }
 }

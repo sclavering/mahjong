@@ -73,11 +73,15 @@ function Grid(templateArray) {
   }
 
   // decide which tiles are which
+  if(all.length % 2) throw "grid has odd number of tiles";
   // xxx randomise, and ensure winnability
-  for(var i in all) all[i].value = i;
+  for(var i in all) all[i].value = Math.floor(Math.random() * all.length / 4);
 }
 
 Grid.prototype = {
+  // a Tile, or null
+  _selectedTile: null,
+
   // Used during grid setup. Adds a tile (if it exists) to one of another's adjacency lists
   _recordTileAsAdjacent: function(tile, listFieldName, countFieldName, dx, dy, dz) {
     const g = this._grid, x = tile.x + dx, y = tile.y + dy, z = tile.z + dz;
@@ -99,13 +103,18 @@ Grid.prototype = {
     return (g[z] && g[z][y] && g[z][y][x]) || null;
   },
 
+  // returns true iff there is a (corner of a) tile at the coordinates
   onTileClicked: function(x, y, z) {
-    alert("tile maybe clicked: ("+x+","+y+","+z+")");
     // the provided coords may be for the right side or bottom half (or both) of the tile
     const tile = this.getTileAt(x, y, z) || this.getTileAt(x, y - 1, z)
         || this.getTileAt(x - 1, y, z) || this.getTileAt(x - 1, y - 1, z);
-    if(!tile) return false;
-    alert(" value="+tile.value+" free?"+tile.isFree);
+    if(!tile || !tile.isFree) return false;
+    if(this._selectedTile && tile.value == this._selectedTile.value) {
+      alert("score!");
+    } else {
+      this._selectedTile = tile;
+      ui.highlightTile(tile);
+    }
     return true;
   }
 }
