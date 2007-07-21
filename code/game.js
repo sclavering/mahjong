@@ -1,4 +1,5 @@
 function Game(templateGrid) {
+  this._history = [];
   [this.grid, this.alltiles] = createGrid(templateGrid);
   this._fillGrid();
 }
@@ -12,14 +13,43 @@ Game.prototype = {
     for(var i in all) all[i].value = Math.floor(Math.random() * all.length / 4);
   },
 
-  // a Tile, or null
-  _selectedTile: null,
+  // The Undo history is an array of [tile, tile] pairs, in order of removal.
+  // From _undoHistoryIx onward, it's actually the Redo "history".
+  _undoHistory: [],
+  _undoHistoryIx: 0,
 
-  removePair: function(tileA, tileB) {
-    if(tileA.value != tileB.value) return false;
-    tileA.remove();
-    tileB.remove();
+  doRemovePair: function(tileA, tileB) {
+    if(!tileA || !tileB || tileA == tileB || tileA.value != tileB.value) return false;
+    this._undoHistory.splice(this._undoHistoryIx); // discard anything undone
+    this._undoHistory.push([tileA, tileB]);
+    this._undoHistoryIx = this._undoHistory.length;
+    this._removeTile(tileA);
+    this._removeTile(tileB);
+    this._selectedTile = null;
+    ui.onPairRemoved(tileA, tileB);
     return true;
+  },
+
+  undoRemovePair: function() {
+    const pair = this._undoHistory[-- this._undoHistoryIx];
+    this._unremoveTile(pair[0]);
+    this._unremoveTile(pair[1]);
+    this._selectedTile = null;
+    ui.onPairUnremoved(tileA, tileB);
+  },
+
+  _removeTile: function(tile) {
+    this.grid[tile.z][tile.y][tile.x] = null;
+    for each(var t in tile.left) --t.numRightBlockers;
+    for each(t in tile.right) --t.numLeftBlockers;
+    for each(t in tile.below) --t.numAboveBlockers;
+  },
+
+  _unremoveTile: function(tile) {
+    this.grid[tile.z][tile.y][tile.x] = tile;
+    for each(var t in tile.left) ++t.numRightBlockers;
+    for each(t in tile.right) ++t.numLeftBlockers;
+    for each(t in tile.below) ++t.numAboveBlockers;
   },
 
   getTileAt: function(x, y, z) {
@@ -27,15 +57,17 @@ Game.prototype = {
     return (g[z] && g[z][y] && g[z][y][x]) || null;
   },
 
+  // a Tile, or null
+  _selectedTile: null,
+
   // returns true iff there is a (corner of a) tile at the coordinates
   onTileClicked: function(x, y, z) {
     // the provided coords may be for the right side or bottom half (or both) of the tile
     const tile = this.getTileAt(x, y, z) || this.getTileAt(x, y - 1, z)
         || this.getTileAt(x - 1, y, z) || this.getTileAt(x - 1, y - 1, z);
-    if(!tile || !tile.isFree) return false;
-    if(this._selectedTile && tile.value == this._selectedTile.value) {
-      alert("score!");
-    } else {
+    if(tile) dump("found actual tile at ("+tile.x+","+tile.y+","+tile.z+")\n");
+    if(!tile || !tile.isFree || tile == this._selectedTile) return false;
+    if(!this.doRemovePair(tile, this._selectedTile)) {
       this._selectedTile = tile;
       ui.highlightTile(tile);
     }
@@ -48,7 +80,6 @@ function Tile(x, y, z) {
   this.x = x;
   this.y = y;
   this.z = z;
-  this.removed = false; // true after it's used to form a pair
   // the numbers of tiles to the left/right/above that prevent this tile being paired
   this.numLeftBlockers = 0;
   this.numRightBlockers = 0;
@@ -63,26 +94,12 @@ function Tile(x, y, z) {
   this.right = [];
   this.below = [];
 }
-
 Tile.prototype = {
   get isFree() {
     return !this.numAboveBlockers && (!this.numLeftBlockers || !this.numRightBlockers);
-  },
-
-  remove: function() {
-    this.removed = true;
-    for each(var t in this.left) --t.numRightBlockers;
-    for each(t in this.right) --t.numLeftBlockers;
-    for each(t in this.below) --t.numAboveBlockers;
-  },
-
-  unremove: function() {
-    this.removed = false;
-    for each(var t in this.left) ++t.numRightBlockers;
-    for each(t in this.right) ++t.numLeftBlockers;
-    for each(t in this.below) ++t.numAboveBlockers;
   }
 }
+
 
 function irange(N) {
   for(var i = 0; i < N; ++i) yield i;

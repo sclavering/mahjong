@@ -58,6 +58,7 @@ const ui = {
   highlightTile: function(tile) {
     const ctx = this._highlightContext;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    if(!tile) return;
     var [x, y] = this._getTileVisualCoords(tile);
     ctx.drawImage(this._images["selectedtile-" + tile.value], x, y)
   },
@@ -69,6 +70,23 @@ const ui = {
     return [x, y];
   },
 
+  onPairRemoved: function(tileA, tileB) {
+    this._undrawTile(tileA);
+    this._undrawTile(tileB);
+    this.highlightTile(null);
+  },
+
+  _undrawTile: function(tile) {
+    var [x, y] = this._getTileVisualCoords(tile);
+    const ctx = this._contexts[tile.z];
+    ctx.clearRect(x, y, kTileWidth, kTileHeight);
+  },
+
+  onPairUnremoved: function(tileA, tileB) {
+    this._drawTile(tileA);
+    this._drawTile(tileB);
+    this.highlightTile(null);
+  },
 
   onclick: function(event) {
     const pixelX = event.clientX - this._stack.boxObject.x;
