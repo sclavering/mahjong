@@ -73,7 +73,7 @@ const ui = {
   onclick: function(event) {
     const pixelX = event.clientX - this._stack.boxObject.x;
     const pixelY = event.clientY - this._stack.boxObject.y;
-    const g = grid._grid, depth = g.length;
+    const g = game.grid, depth = g.length;
     for(var z = depth - 1; z >= 0; --z) {
       // reverse the layer tile-shadow offsets
       var layerPixelX = pixelX - z * kLayerXOffset;
@@ -83,7 +83,7 @@ const ui = {
       var y = Math.floor(layerPixelY / kTileHalfHeight) - 1;
       dump("click: ("+pixelX+","+pixelY+") == ("+layerPixelX+","+layerPixelY+") in layer "+z);
       dump(" -- logical tile ("+x+","+y+","+z+")\n");
-      if(grid.onTileClicked(x, y, z)) break;
+      if(game.onTileClicked(x, y, z)) break;
     }
   }
 }

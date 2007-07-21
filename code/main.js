@@ -1,9 +1,9 @@
-var grid = null;
+var game = null;
 
 window.onload = function() {
   window.onload = null;
   layouts.init();
   ui.init();
-  grid = new Grid(layouts.get("simple"));
-  ui.show(grid._grid);
+  game = new Game(layouts.get("simple"));
+  ui.show(game.grid);
 }
