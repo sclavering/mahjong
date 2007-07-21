@@ -2,6 +2,7 @@ const layouts = {
   // layout-id -> chrome URL map
   _files: {
     'simple': 'chrome://mozjong/content/layouts/simple',
+    'cloud': 'chrome://mozjong/content/layouts/cloud',
   },
   // layout-id -> template map.  templates are z-y-x-indexed arrays of booleans
   _gridTemplates: {},
