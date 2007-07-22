@@ -15,7 +15,8 @@ const ui = {
     this._stack = document.getElementById("gamearea");
     this._contexts = []; // nsIDOMCanvasRenderingContext2D
     const images = document.getElementById("html_img_elements");
-    for each(var el in images.childNodes) this._images[el.id] = el;
+    // the |if| skips over the whitespace text nodes
+    for each(var el in images.childNodes) if(el.id) this._images[el.id] = el;
   },
 
   // pass a z-y-x indexed array of Tile objects and nulls
@@ -38,7 +39,7 @@ const ui = {
           this._drawTile(grid[z][y][x]);
     this._stack.width = pxwidth;
     this._stack.height = pxheight;
-    window.sizeToContent();
+    window.resizeTo(pxwidth, pxheight);
     this._stack.onclick = function(e) { ui.onclick(e); };
   },
 

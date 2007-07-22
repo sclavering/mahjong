@@ -1,18 +1,10 @@
 function Game(templateGrid) {
   this._history = [];
   [this.grid, this.alltiles] = createGrid(templateGrid);
-  this._fillGrid();
+  fillGrid(this.alltiles);
 }
 
 Game.prototype = {
-  _fillGrid: function() {
-    const all = this.alltiles;
-    // decide which tiles are which
-    if(all.length % 2) throw "grid has odd number of tiles";
-    // xxx randomise, and ensure winnability
-    for(var i in all) all[i].value = Math.floor(Math.random() * all.length / 4);
-  },
-
   // The Undo history is an array of [tile, tile] pairs, in order of removal.
   // From _undoHistoryIx onward, it's actually the Redo "history".
   _undoHistory: [],
@@ -80,6 +72,7 @@ function Tile(x, y, z) {
   this.x = x;
   this.y = y;
   this.z = z;
+  this.tileid = x + "-" + y + "-" + z; // e.g. 3-5-2.  used as a fieldname when modelling a set
   // the numbers of tiles to the left/right/above that prevent this tile being paired
   this.numLeftBlockers = 0;
   this.numRightBlockers = 0;
@@ -93,10 +86,34 @@ function Tile(x, y, z) {
   this.left = [];
   this.right = [];
   this.below = [];
+  // Only used when filling the grid.  List of Tile objects overlapping |this|
+  // in the layer immediately above.
+  this.tilesAbove = [];
+
+  // Needed when deciding which tiles are which at the start of the game to
+  // ensure winnability. Values are "not fillable", "leftleaf"/"rightleaf"
+  // (which means that the tile was marked as fillable when all its right/left
+  // (respectively) blockers were already filled or could be filled from the
+  // other side, and "base", for tiles which can be filled because they're not
+  // on top of any others and no obstructions have yet been placed.  For tiles
+  // that become fillable after all those underneath them are filled we use
+  // "topleaf". Lastly, "filled" means the tile has already been given a value.
+  this.fillableBecause = "not fillable";
+
+  this.isFilled = false; // xxx could just do !isNaN(tile.value)
+  // Used when "filling" the grid: assigning values to the Tile objects such
+  // that the result is a winnable game.
+  this.canFillFromRight = true; // true iff there are no filed tiles in a recursive trawl of .right
+  this.canFillFromLeft = true;
+  this.canFillNow = false;
+  this.canFillInitially = false;
 }
 Tile.prototype = {
   get isFree() {
     return !this.numAboveBlockers && (!this.numLeftBlockers || !this.numRightBlockers);
+  },
+  toString: function() {
+    return this.tileid + ":" + this.value;
   }
 }
 
@@ -144,4 +161,113 @@ function _recordTileAsAdjacent(grid, tile, listFieldName, countFieldName, dx, dy
     if(!other) return;
     tile[listFieldName].push(other);
     other[countFieldName] += 1;
+    if(listFieldName == "below") other.tilesAbove.push(tile); // ew
+}
+
+
+// Creates a game that is winnable (in at least one way) by repeatedly adding
+// pairs to the empty grid.  The tiles are actually in a grid already, and this
+// function just assigns them values.
+function fillGrid(alltiles) {
+  const values = getTileValues(alltiles.length);
+  dump("values.length:" +values.length+"\n")
+  // Initially, only tiles which are not on top of another tile may be filled,
+  // and the filling can happen from either side.
+  for each(var t in alltiles) if(!t.below.length) t.canFillInitially = true;
+  while(values.length) {
+    var value = values.pop();
+    placeTile(alltiles, value);
+    placeTile(alltiles, value);
+  dump("values.length:" +values.length+"\n")
+  }
+}
+
+function placeTile(tiles, value) {
+  // Regenerating this list all the time makes for simple code
+  const fillable = [t for each(t in tiles) if(!t.isFilled && (t.canFillInitially || t.canFillNow))];
+  dump("fillable: "+fillable+"\n")
+  const tile = fillable[randomInt(fillable.length)];
+  dump("set tile "+tile.tileid+" to value:"+value+"\n")
+  tile.value = value;
+  tile.isFilled = true;
+  // Mark tiles in the same row/lattice as no longer fillable from one side.
+  // Also, clear the .canFillInitially fields, since filling any of these tiles
+  // immediately would leaves those between them and |tile| unfillable.
+  markNotLeftFillable(tile);
+  markNotRightFillable(tile);
+  // Mark adjacent tiles which are now ready to be filled
+  markAdjacentIfNewlyFillable(tile.tilesAbove, "below");
+  markAdjacentIfNewlyFillable(tile.left, "right");
+  markAdjacentIfNewlyFillable(tile.right, "left");
+}
+
+function markAdjacentIfNewlyFillable(tiles, setWhichMustAllBeFilledFieldName) {
+  for each(var tile in tiles) {
+    for each(var t in tile[setWhichMustAllBeFilledFieldName]) if(!t.isFilled) continue;
+    tile.canFillNow = true;
+  }
+}
+
+function markNotLeftFillable(tile) {
+  if(!tile.canFillFromLeft) return;
+  tile.canFillFromLeft = false;
+  tile.canFillInitially = false;
+  for each(var l in tile.left) markNotLeftFillable(l);
+}
+
+function markNotRightFillable(tile) {
+  if(!tile.canFillFromRight) return;
+  tile.canFillFromRight = false;
+  tile.canFillInitially = false;
+  for each(var r in tile.right) markNotRightFillable(r);
+}
+
+
+function getTileValues(num) {
+  if(num % 4) throw "the number of tiles isn't a multiple of 4";
+  var values = [i for each(i in irange(num / 4))];
+  // double them up because we add tiles in pairs, not fours
+  return shuffle(Array.concat(values, values));
+}
+
+function _shuffle(items) {
+  // shuffle several times, because Math.random() appears to be rather bad.
+  for(var i = 0; i != 5; i++) {
+    // invariant: cards[0..n) unshuffled, cards[n..N) shuffled
+    for(var n = items.length; n >= 0; --n) {
+      var num = randomInt(n);
+      [items[n], items[num]] = [items[num], items[n]];
+    }
+  }
+  return items;
+}
+
+// return a random integer in the range [0, 1, .., N)
+function randomInt(N) {
+  // Math.random() gives a float from 0.0 to 1.0 inclusive.
+  do { var num = Math.random(); } while(num >= 1.0);
+  return Math.floor(num * N);
+}
+
+function shuffle(cards) {
+  cards = cards.slice(0); // copy
+
+  // shuffle several times, because Math.random() appears to be rather bad.
+  for(var i = 0; i != 5; i++) {
+    // invariant: cards[0..n) unshuffled, cards[n..N) shuffled
+    var n = cards.length;
+    while(n != 0) {
+      // get num from range [0..n)
+      var num = Math.random();
+      while(num==1.0) num = Math.random();
+      num = Math.floor(num * n);
+      // swap
+      n--;
+      var temp = cards[n];
+      cards[n] = cards[num];
+      cards[num] = temp;
+    }
+  }
+
+  return cards;
 }
