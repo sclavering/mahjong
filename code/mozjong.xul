@@ -8,7 +8,6 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     width="300"
     height="300"
-    align="center"
     title="Mozjong"
     >
 
@@ -116,6 +115,15 @@
   <img id="selectedtile-42" src="images/tile_85.png"/>
 </nonsenseelement>
 
-<stack id="gamearea"/>
+<toolbox id="toolbox">
+  <toolbar id="toolbar">
+    <toolbarbutton id="undobtn" label="Undo" oncommand="game.undo();"/>
+    <toolbarbutton id="redobtn" label="Redo" oncommand="game.redo();"/>
+  </toolbar>
+</toolbox>
+
+<hbox align="center">
+  <stack id="gamearea"/>
+</hbox>
 
 </window>

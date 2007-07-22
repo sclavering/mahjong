@@ -22,12 +22,22 @@ Game.prototype = {
     return true;
   },
 
-  undoRemovePair: function() {
+  undo: function() {
+    if(!this._undoHistoryIx) return;
     const pair = this._undoHistory[-- this._undoHistoryIx];
     this._unremoveTile(pair[0]);
     this._unremoveTile(pair[1]);
     this._selectedTile = null;
-    ui.onPairUnremoved(tileA, tileB);
+    ui.onPairUnremoved(pair[0], pair[1]);
+  },
+
+  redo: function() {
+    if(this._undoHistoryIx == this._undoHistory.length) return;
+    const pair = this._undoHistory[this._undoHistoryIx ++];
+    this._removeTile(pair[0]);
+    this._removeTile(pair[1]);
+    this._selectedTile = null;
+    ui.onPairRemoved(pair[0], pair[1]);
   },
 
   _removeTile: function(tile) {
