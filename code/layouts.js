@@ -1,11 +1,13 @@
 const layouts = {
-  // layout-id -> chrome URL map
-  _files: {
-    'simple': 'chrome://mozjong/content/layouts/simple',
+  // values of FOO for which chrome://mozjong/content/layouts/FOO is a layout file
+  _layouts: [
+    // stuff for testing
+    'simple',
+    // real layouts
+    'easy',
+    'cloud',
+  ],
 
-    'easy': 'chrome://mozjong/content/layouts/easy',
-    'cloud': 'chrome://mozjong/content/layouts/cloud',
-  },
   // layout-id -> template map.  templates are z-y-x-indexed arrays of booleans
   _gridTemplates: {},
 
@@ -16,8 +18,8 @@ const layouts = {
   init: function() {
     const req = new XMLHttpRequest();
     const texts = {};
-    for(var id in this._files) {
-      req.open("GET", this._files[id], false); //synchronous
+    for each(var id in this._layouts) {
+      req.open("GET", 'chrome://mozjong/content/layouts/' + id, false); //synchronous
       req.send(null);
       dump("loaded:\n==========\n"+req.responseText+"\n===========\n");
       texts[id] = req.responseText;
