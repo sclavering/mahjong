@@ -114,6 +114,9 @@ Tile.prototype = {
   },
   toString: function() {
     return this.tileid + ":" + this.value;
+  },
+  get isFillable() {
+    return !this.isFilled && (this.canFillNow || this.canFillInitially);
   }
 }
 
@@ -187,7 +190,7 @@ function fillGrid(alltiles) {
 }
 
 function fillTile(tiles, value) {
-  const fillable = [t for each(t in tiles) if(!t.isFilled && (t.canFillInitially || t.canFillNow))];
+  const fillable = [t for each(t in tiles) if(t.isFillable)];
   dump("fillable:"+fillable.length+":"+fillable+"\n")
   const tile = fillable[randomInt(fillable.length)];
   tile.value = value;
