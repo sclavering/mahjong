@@ -33,15 +33,14 @@ const ui = {
     this._dimensions = [w, h, d];
     const pxwidth = (w + 2) * kTileHalfWidth;
     const pxheight = (h + 2) * kTileHalfHeight;
-    // two contexts per layer (one for tiles, one for their edges/shadows), and an extra for the selected tile
-    for(var z = 0; z != d * 2 + 1; ++z) {
+    // two contexts per layer (one for tiles, one for their edges/shadows)
+    for(var z = 0; z != d * 2; ++z) {
       var canvas = document.createElementNS(HTMLns, "canvas");
       this._stack.appendChild(canvas);
       canvas.width = pxwidth;
       canvas.height = pxheight;
       this._contexts[z] = canvas.getContext("2d");
     }
-    this._highlightContext = this._contexts.pop();
     this._stack.width = pxwidth;
     this._stack.height = pxheight;
     window.resizeTo(pxwidth, pxheight);
@@ -57,25 +56,31 @@ const ui = {
 
   _drawTile: function(tile) {
     if(!tile) return;
-    const ctx1 = this._contexts[tile.z * 2], ctx2 = this._contexts[tile.z * 2 + 1];
-    var [x, y] = this._getTileVisualCoords(tile);
+    var [x, y] = this._drawTileFace(tile, "tile-");
     // draw a shadow, badly
+    const ctx1 = this._contexts[tile.z * 2];
     ctx1.fillStyle = "rgba(128, 128, 128, 0.3)";
     ctx1.fillRect(x - kLayerXOffset, y - kLayerYOffset, kTileWidth, kTileHeight);
-    // draw the tile
-    ctx2.drawImage(this._images["tile-" + tile.value], x, y);
+  },
+
+  _drawTileFace: function(tile, imageKind) {
+    if(!tile) return null;
+    var [x, y] = this._getTileVisualCoords(tile);
+    const ctx2 = this._contexts[tile.z * 2 + 1];
+    ctx2.clearRect(x, y, kTileWidth, kTileHeight);
+    ctx2.drawImage(this._images[imageKind + tile.value], x, y);
     // draw an extra border, since the tiles lack left borders
     ctx2.fillStyle = "black";
     ctx2.strokeRect(x + 0.5, y + 0.5, kTileWidth - 1, kTileHeight - 1);
+    return [x, y];
   },
 
   highlightTile: function(tile) {
-    const ctx = this._highlightContext;
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    if(!tile) return;
-    var [x, y] = this._getTileVisualCoords(tile);
-    ctx.drawImage(this._images["selectedtile-" + tile.value], x, y)
+    this._drawTileFace(this._highlighted, "tile-");
+    this._highlighted = tile;
+    this._drawTileFace(this._highlighted, "selectedtile-");
   },
+  _highlighted: null, // a Tile, or null
 
   _getTileVisualCoords: function(tile) {
     // +1 to x/y gives a visual border and space for the layer offsets to use up
@@ -87,7 +92,7 @@ const ui = {
   onPairRemoved: function(tileA, tileB) {
     this._undrawTile(tileA);
     this._undrawTile(tileB);
-    this.highlightTile(null);
+    this._highlighted = null;
   },
 
   _undrawTile: function(tile) {
