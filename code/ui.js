@@ -24,8 +24,8 @@ const ui = {
     const d = grid.length, h = grid[0].length, w = grid[0][0].length;
     const pxwidth = (w + 2) * kTileHalfWidth;
     const pxheight = (h + 2) * kTileHalfHeight;
-    // we create an extra <canvas> just for drawing selected tiles in
-    for(var z = 0; z != d + 1; ++z) {
+    // two contexts per layer (one for tiles, one for their edges/shadows), and an extra for the selected tile
+    for(var z = 0; z != d * 2 + 1; ++z) {
       var canvas = document.createElementNS(HTMLns, "canvas");
       this._stack.appendChild(canvas);
       canvas.width = pxwidth;
@@ -47,13 +47,16 @@ const ui = {
     if(!tile) return;
     dump("drawing ("+tile.x+","+tile.y+","+tile.z+"): "+tile.value+" at (");
     dump(((tile.x + 1) * kTileHalfWidth) +","+ ((tile.y + 1) * kTileHalfHeight)+","+ kTileWidth+","+ kTileHeight+")\n");
-    const ctx = this._contexts[tile.z];
+    const ctx1 = this._contexts[tile.z * 2], ctx2 = this._contexts[tile.z * 2 + 1];
     var [x, y] = this._getTileVisualCoords(tile);
     // draw a shadow, badly
-    ctx.fillStyle = "rgba(128, 128, 128, 0.3)";
-    ctx.fillRect(x - kLayerXOffset, y - kLayerYOffset, kTileWidth, kTileHeight);
+    ctx1.fillStyle = "rgba(128, 128, 128, 0.3)";
+    ctx1.fillRect(x - kLayerXOffset, y - kLayerYOffset, kTileWidth, kTileHeight);
     // draw the tile
-    ctx.drawImage(this._images["tile-" + tile.value], x, y);
+    ctx2.drawImage(this._images["tile-" + tile.value], x, y);
+    // draw an extra border, since the tiles lack left borders
+    ctx2.fillStyle = "black";
+    ctx2.strokeRect(x + 0.5, y + 0.5, kTileWidth - 1, kTileHeight - 1);
   },
 
   highlightTile: function(tile) {
@@ -79,8 +82,10 @@ const ui = {
 
   _undrawTile: function(tile) {
     var [x, y] = this._getTileVisualCoords(tile);
-    const ctx = this._contexts[tile.z];
-    ctx.clearRect(x, y, kTileWidth, kTileHeight);
+    // clear tile face then clear shadow
+    const ix = tile.z * 2, facectx = this._contexts[ix + 1], ectx = this._contexts[ix];
+    facectx.clearRect(x, y, kTileWidth, kTileHeight);
+    ectx.clearRect(x - kLayerXOffset, y - kLayerYOffset, kTileWidth, kTileHeight);
   },
 
   onPairUnremoved: function(tileA, tileB) {
