@@ -117,6 +117,7 @@
 
 <toolbox id="toolbox">
   <toolbar id="toolbar">
+    <toolbarbutton id="newbtn" label="New" oncommand="newGame();"/>
     <toolbarbutton id="undobtn" label="Undo" oncommand="game.undo();"/>
     <toolbarbutton id="redobtn" label="Redo" oncommand="game.redo();"/>
   </toolbar>

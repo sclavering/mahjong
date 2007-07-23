@@ -4,6 +4,10 @@ window.onload = function() {
   window.onload = null;
   layouts.init();
   ui.init();
-  game = new Game(layouts.get("easy"));
+  newGame();
+}
+
+function newGame() {
+  game = new Game(layouts.get("test-minipyramid"));
   ui.show(game.grid);
 }

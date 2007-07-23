@@ -8,8 +8,9 @@ const kLayerXOffset = -4;
 const kLayerYOffset = -4;
 
 const ui = {
-  // <html:img>s for drawing
-  _images: {},
+  _images: {},   // <html:img>s for drawing
+  _contexts: [], // array of nsIDOMCanvasRenderingContext2D
+  _dimensions: [0,0,0],  // width,height,depth last used
 
   init: function() {
     this._stack = document.getElementById("gamearea");
@@ -22,6 +23,14 @@ const ui = {
   // pass a z-y-x indexed array of Tile objects and nulls
   show: function(grid) {
     const d = grid.length, h = grid[0].length, w = grid[0][0].length;
+    const dim = this._dimensions;
+    if(!(dim[0] == w && dim[1] == h && dim[2] == d)) this._resize(w, h, d);
+    this._draw(w, h, d, grid);
+  },
+
+  _resize: function(w, h, d) {
+    while(this._stack.hasChildNodes()) this._stack.removeChild(this._stack.lastChild);
+    this._dimensions = [w, h, d];
     const pxwidth = (w + 2) * kTileHalfWidth;
     const pxheight = (h + 2) * kTileHalfHeight;
     // two contexts per layer (one for tiles, one for their edges/shadows), and an extra for the selected tile
@@ -33,13 +42,16 @@ const ui = {
       this._contexts[z] = canvas.getContext("2d");
     }
     this._highlightContext = this._contexts.pop();
-    for(z = 0; z != d; ++z)
-      for(var y = 0; y != h; ++y)
-        for(var x = 0; x != w; ++x)
-          this._drawTile(grid[z][y][x]);
     this._stack.width = pxwidth;
     this._stack.height = pxheight;
     window.resizeTo(pxwidth, pxheight);
+  },
+
+  _draw: function(w, h, d, grid) {
+    for(var z = 0; z != d; ++z)
+      for(var y = 0; y != h; ++y)
+        for(var x = 0; x != w; ++x)
+          this._drawTile(grid[z][y][x]);
     this._stack.onclick = function(e) { ui.onclick(e); };
   },
 
