@@ -1,8 +1,10 @@
 const layouts = {
   // values of FOO for which chrome://mozjong/content/layouts/FOO is a layout file
   _layouts: [
-    // stuff for testing
-    'simple',
+    'test-simple',
+    'test-towers',
+    'test-brokentowers',
+    'test-minipyramid',
     // real layouts
     'easy',
     'cloud',
