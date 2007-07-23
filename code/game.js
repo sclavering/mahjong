@@ -235,12 +235,13 @@ function getTileValues(num) {
   return shuffle(Array.concat(values, values));
 }
 
-function _shuffle(items) {
+function shuffle(items) {
   // shuffle several times, because Math.random() appears to be rather bad.
-  for(var i = 0; i != 5; i++) {
-    // invariant: cards[0..n) unshuffled, cards[n..N) shuffled
-    for(var n = items.length; n > 0; --n) {
+  for(var i = 0; i != 5; ++i) {
+    // invariant: items[0..n) unshuffled, items[n..N) shuffled
+    for(var n = items.length; n > 0; ) {
       var num = randomInt(n);
+      --n;
       [items[n], items[num]] = [items[num], items[n]];
     }
   }
@@ -252,27 +253,4 @@ function randomInt(N) {
   // Math.random() gives a float from 0.0 to 1.0 inclusive.
   do { var num = Math.random(); } while(num >= 1.0);
   return Math.floor(num * N);
-}
-
-function shuffle(cards) {
-  cards = cards.slice(0); // copy
-
-  // shuffle several times, because Math.random() appears to be rather bad.
-  for(var i = 0; i != 5; i++) {
-    // invariant: cards[0..n) unshuffled, cards[n..N) shuffled
-    var n = cards.length;
-    while(n != 0) {
-      // get num from range [0..n)
-      var num = Math.random();
-      while(num==1.0) num = Math.random();
-      num = Math.floor(num * n);
-      // swap
-      n--;
-      var temp = cards[n];
-      cards[n] = cards[num];
-      cards[num] = temp;
-    }
-  }
-
-  return cards;
 }
