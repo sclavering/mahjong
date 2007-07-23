@@ -8,6 +8,7 @@ const layouts = {
     // real layouts
     'easy',
     'cloud',
+    'pyramidswalls',
   ],
 
   // layout-id -> template map.  templates are z-y-x-indexed arrays of booleans
