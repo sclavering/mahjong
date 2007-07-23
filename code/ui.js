@@ -57,8 +57,6 @@ const ui = {
 
   _drawTile: function(tile) {
     if(!tile) return;
-    dump("drawing ("+tile.x+","+tile.y+","+tile.z+"): "+tile.value+" at (");
-    dump(((tile.x + 1) * kTileHalfWidth) +","+ ((tile.y + 1) * kTileHalfHeight)+","+ kTileWidth+","+ kTileHeight+")\n");
     const ctx1 = this._contexts[tile.z * 2], ctx2 = this._contexts[tile.z * 2 + 1];
     var [x, y] = this._getTileVisualCoords(tile);
     // draw a shadow, badly
