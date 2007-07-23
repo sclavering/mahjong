@@ -112,9 +112,7 @@ Tile.prototype = {
   get isFree() {
     return !this.numAboveBlockers && (!this.numLeftBlockers || !this.numRightBlockers);
   },
-  toString: function() {
-    return this.tileid + ":" + this.value;
-  },
+  toString: function() { return this.tileid; },
   get isFillable() {
     return !this.isFilled && (this.canFillNow || this.canFillInitially);
   }
@@ -180,38 +178,60 @@ function fillGrid(alltiles) {
   while(values.length) {
     var value = values.pop();
     var tile1 = fillTile(alltiles, value);
+    markNewlyFillableAsSecondOfPair(tile1);
     var tile2 = fillTile(alltiles, value);
-    dump("filling tiles: "+tile1+" "+tile2+" with value "+value+"\n")
-    // We mark these as fillable separately and afterward, because you can't
-    // pair a tile with one that's on top of it.
-    markAdjacentIfNewlyFillable(tile1.tilesAbove, "below");
-    markAdjacentIfNewlyFillable(tile2.tilesAbove, "below");
+    markNewlyFillable(tile1);
+    markNewlyFillable(tile2);
   }
 }
 
 function fillTile(tiles, value) {
   const fillable = [t for each(t in tiles) if(t.isFillable)];
-  dump("fillable:"+fillable.length+":"+fillable+"\n")
+  dump("fillable:"+fillable.length+": "+fillable+"\n")
   const tile = fillable[randomInt(fillable.length)];
   tile.value = value;
+  dump("filled: "+tile+" "+value+"\n")
   tile.isFilled = true;
   // Mark tiles in the same row/lattice as no longer fillable from one side.
   // Also, clear the .canFillInitially fields, since filling any of these tiles
   // immediately would leaves those between them and |tile| unfillable.
   markNotLeftFillable(tile);
   markNotRightFillable(tile);
-  // Mark adjacent tiles which are now ready to be filled
-  markAdjacentIfNewlyFillable(tile.left, "right");
-  markAdjacentIfNewlyFillable(tile.right, "left");
   return tile;
 }
 
-function markAdjacentIfNewlyFillable(tiles, setWhichMustAllBeFilledFieldName) {
-  for each(var tile in tiles) {
-    for each(var t in tile[setWhichMustAllBeFilledFieldName]) if(!t.isFilled) continue;
-    tile.canFillNow = true;
-  }
+
+// Most tiles become fillable only after a pair is filled, but there are a few
+// circumstances where an adjacent pair can be filled together, and this marks
+// tiles such that those cases can occur.
+function markNewlyFillableAsSecondOfPair(tile) {
+  if(!Array.some(tile.left, isFilled)) markRightsIfNowFillable(tile);
+  if(!Array.some(tile.right, isFilled)) markLeftsIfNowFillable(tile);
 }
+
+// Mark newly fillable after both tiles of a pair have been filled
+function markNewlyFillable(tile) {
+  markRightsIfNowFillable(tile);
+  markLeftsIfNowFillable(tile);
+  checkIfTilesAboveAreNowFillable(tile);
+}
+
+function checkIfTilesAboveAreNowFillable(tile) {
+  for each(var a in tile.tilesAbove)
+    // the &&'s defer marking it if another in its lattice has been filled
+    if(Array.every(a.below, isFilled) && a.canFillFromRight && a.canFillFromLeft)
+      a.canFillNow = true;
+}
+
+function markRightsIfNowFillable(tile) {
+  for each(var t in tile.right) if(Array.every(t.left, isFilled)) t.canFillNow = true;
+}
+
+function markLeftsIfNowFillable(tile) {
+  for each(var t in tile.left) if(Array.every(t.right, isFilled)) t.canFillNow = true;
+}
+
+function isFilled(t) { return t.isFilled; } // for use with Array.every/Array.some
 
 function markNotLeftFillable(tile) {
   if(!tile.canFillFromLeft) return;
