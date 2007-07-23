@@ -100,16 +100,6 @@ function Tile(x, y, z) {
   // in the layer immediately above.
   this.tilesAbove = [];
 
-  // Needed when deciding which tiles are which at the start of the game to
-  // ensure winnability. Values are "not fillable", "leftleaf"/"rightleaf"
-  // (which means that the tile was marked as fillable when all its right/left
-  // (respectively) blockers were already filled or could be filled from the
-  // other side, and "base", for tiles which can be filled because they're not
-  // on top of any others and no obstructions have yet been placed.  For tiles
-  // that become fillable after all those underneath them are filled we use
-  // "topleaf". Lastly, "filled" means the tile has already been given a value.
-  this.fillableBecause = "not fillable";
-
   this.isFilled = false; // xxx could just do !isNaN(tile.value)
   // Used when "filling" the grid: assigning values to the Tile objects such
   // that the result is a winnable game.
@@ -186,18 +176,20 @@ function fillGrid(alltiles) {
   for each(var t in alltiles) if(!t.below.length) t.canFillInitially = true;
   while(values.length) {
     var value = values.pop();
-    placeTile(alltiles, value);
-    placeTile(alltiles, value);
-  dump("values.length:" +values.length+"\n")
+    var tile1 = fillTile(alltiles, value);
+    var tile2 = fillTile(alltiles, value);
+    dump("filling tiles: "+tile1+" "+tile2+" with value "+value+"\n")
+    // We mark these as fillable separately and afterward, because you can't
+    // pair a tile with one that's on top of it.
+    markAdjacentIfNewlyFillable(tile1.tilesAbove, "below");
+    markAdjacentIfNewlyFillable(tile2.tilesAbove, "below");
   }
 }
 
-function placeTile(tiles, value) {
-  // Regenerating this list all the time makes for simple code
+function fillTile(tiles, value) {
   const fillable = [t for each(t in tiles) if(!t.isFilled && (t.canFillInitially || t.canFillNow))];
-  dump("fillable: "+fillable+"\n")
+  dump("fillable:"+fillable.length+":"+fillable+"\n")
   const tile = fillable[randomInt(fillable.length)];
-  dump("set tile "+tile.tileid+" to value:"+value+"\n")
   tile.value = value;
   tile.isFilled = true;
   // Mark tiles in the same row/lattice as no longer fillable from one side.
@@ -206,9 +198,9 @@ function placeTile(tiles, value) {
   markNotLeftFillable(tile);
   markNotRightFillable(tile);
   // Mark adjacent tiles which are now ready to be filled
-  markAdjacentIfNewlyFillable(tile.tilesAbove, "below");
   markAdjacentIfNewlyFillable(tile.left, "right");
   markAdjacentIfNewlyFillable(tile.right, "left");
+  return tile;
 }
 
 function markAdjacentIfNewlyFillable(tiles, setWhichMustAllBeFilledFieldName) {
@@ -244,7 +236,7 @@ function _shuffle(items) {
   // shuffle several times, because Math.random() appears to be rather bad.
   for(var i = 0; i != 5; i++) {
     // invariant: cards[0..n) unshuffled, cards[n..N) shuffled
-    for(var n = items.length; n >= 0; --n) {
+    for(var n = items.length; n > 0; --n) {
       var num = randomInt(n);
       [items[n], items[num]] = [items[num], items[n]];
     }
