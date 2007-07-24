@@ -36,12 +36,14 @@ const layouts = {
     const layerlength = txt.indexOf("\n\n") + 1;
     const layerheight = layerlength / (linelength + 1);
     if(layerheight != Math.floor(layerheight)) throw "layout very broken: non-integer number of rows";
-    return [this._parseLayer(layer, linelength, layerheight) for each(layer in txt.split("\n\n"))];
+    const layerstrs = txt.split("\n\n");
+    return [this._parseLayer(i, layerstrs[i], linelength, layerheight) for(i in layerstrs)];
   },
 
-  _parseLayer: function(txt, layerWidth, layerHeight) {
+  _parseLayer: function(index, txt, layerWidth, layerHeight) {
     const lines = [this._parseLine(line, layerWidth) for each(line in txt.split("\n"))];
-    if(lines.length != layerHeight) throw "layer in layout has wrong height";
+    if(lines.length != layerHeight)
+      throw "layer "+index+" in layout has height "+lines.length+" (should be "+layerHeight+")";
     return lines;
   },
 
