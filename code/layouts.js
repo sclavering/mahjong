@@ -9,6 +9,7 @@ const layouts = {
     'easy',
     'cloud',
     'confoundingcross',
+    'glyph',
     'pyramidswalls',
   ],
 
