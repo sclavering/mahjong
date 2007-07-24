@@ -69,50 +69,6 @@
   <img id="tile-40" src="images/tile_40.png"/>
   <img id="tile-41" src="images/tile_41.png"/>
   <img id="tile-42" src="images/tile_42.png"/>
-
-  <img id="selectedtile-0" src="images/tile_43.png"/>
-  <img id="selectedtile-1" src="images/tile_44.png"/>
-  <img id="selectedtile-2" src="images/tile_45.png"/>
-  <img id="selectedtile-3" src="images/tile_46.png"/>
-  <img id="selectedtile-4" src="images/tile_47.png"/>
-  <img id="selectedtile-5" src="images/tile_48.png"/>
-  <img id="selectedtile-6" src="images/tile_49.png"/>
-  <img id="selectedtile-7" src="images/tile_50.png"/>
-  <img id="selectedtile-8" src="images/tile_51.png"/>
-  <img id="selectedtile-9" src="images/tile_52.png"/>
-  <img id="selectedtile-10" src="images/tile_53.png"/>
-  <img id="selectedtile-11" src="images/tile_54.png"/>
-  <img id="selectedtile-12" src="images/tile_55.png"/>
-  <img id="selectedtile-13" src="images/tile_56.png"/>
-  <img id="selectedtile-14" src="images/tile_57.png"/>
-  <img id="selectedtile-15" src="images/tile_58.png"/>
-  <img id="selectedtile-16" src="images/tile_59.png"/>
-  <img id="selectedtile-17" src="images/tile_60.png"/>
-  <img id="selectedtile-18" src="images/tile_61.png"/>
-  <img id="selectedtile-19" src="images/tile_62.png"/>
-  <img id="selectedtile-20" src="images/tile_63.png"/>
-  <img id="selectedtile-21" src="images/tile_64.png"/>
-  <img id="selectedtile-22" src="images/tile_65.png"/>
-  <img id="selectedtile-23" src="images/tile_66.png"/>
-  <img id="selectedtile-24" src="images/tile_67.png"/>
-  <img id="selectedtile-25" src="images/tile_68.png"/>
-  <img id="selectedtile-26" src="images/tile_69.png"/>
-  <img id="selectedtile-27" src="images/tile_70.png"/>
-  <img id="selectedtile-28" src="images/tile_71.png"/>
-  <img id="selectedtile-29" src="images/tile_72.png"/>
-  <img id="selectedtile-30" src="images/tile_73.png"/>
-  <img id="selectedtile-31" src="images/tile_74.png"/>
-  <img id="selectedtile-32" src="images/tile_75.png"/>
-  <img id="selectedtile-33" src="images/tile_76.png"/>
-  <img id="selectedtile-34" src="images/tile_77.png"/>
-  <img id="selectedtile-35" src="images/tile_78.png"/>
-  <img id="selectedtile-36" src="images/tile_79.png"/>
-  <img id="selectedtile-37" src="images/tile_80.png"/>
-  <img id="selectedtile-38" src="images/tile_81.png"/>
-  <img id="selectedtile-39" src="images/tile_82.png"/>
-  <img id="selectedtile-40" src="images/tile_83.png"/>
-  <img id="selectedtile-41" src="images/tile_84.png"/>
-  <img id="selectedtile-42" src="images/tile_85.png"/>
 </nonsenseelement>
 
 <toolbox id="toolbox">

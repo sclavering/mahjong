@@ -56,19 +56,19 @@ const ui = {
 
   _drawTile: function(tile) {
     if(!tile) return;
-    var [x, y] = this._drawTileFace(tile, "tile-");
+    var [x, y] = this._drawTileFace(tile);
     // draw a shadow, badly
     const ctx1 = this._contexts[tile.z * 2];
     ctx1.fillStyle = "rgba(128, 128, 128, 0.3)";
     ctx1.fillRect(x - kLayerXOffset, y - kLayerYOffset, kTileWidth, kTileHeight);
   },
 
-  _drawTileFace: function(tile, imageKind) {
+  _drawTileFace: function(tile) {
     if(!tile) return null;
     var [x, y] = this._getTileVisualCoords(tile);
     const ctx2 = this._contexts[tile.z * 2 + 1];
     ctx2.clearRect(x, y, kTileWidth, kTileHeight);
-    ctx2.drawImage(this._images[imageKind + tile.value], x, y);
+    ctx2.drawImage(this._images["tile-" + tile.value], x, y);
     // draw an extra border, since the tiles lack left borders
     ctx2.fillStyle = "black";
     ctx2.strokeRect(x + 0.5, y + 0.5, kTileWidth - 1, kTileHeight - 1);
@@ -76,9 +76,12 @@ const ui = {
   },
 
   highlightTile: function(tile) {
-    this._drawTileFace(this._highlighted, "tile-");
+    this._drawTileFace(this._highlighted);
     this._highlighted = tile;
-    this._drawTileFace(this._highlighted, "selectedtile-");
+    var [x, y] = this._getTileVisualCoords(tile);
+    const ctx = this._contexts[tile.z * 2 + 1];
+    ctx.fillStyle = "rgba(10%, 10%, 100%, 0.3)"
+    ctx.fillRect(x, y, kTileWidth, kTileHeight);
   },
   _highlighted: null, // a Tile, or null
 
