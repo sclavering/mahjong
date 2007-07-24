@@ -7,6 +7,7 @@ const layouts = {
     'test-minipyramid',
     // real layouts
     'easy',
+    'castle',
     'cloud',
     'confoundingcross',
     'glyph',
