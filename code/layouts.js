@@ -8,6 +8,7 @@ const layouts = {
     // real layouts
     'easy',
     'cloud',
+    'confoundingcross',
     'pyramidswalls',
   ],
 
