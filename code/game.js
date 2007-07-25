@@ -170,7 +170,6 @@ function fillGrid(alltiles) {
   const values = getTileValues(alltiles.length);
   // Initially, only tiles which are not on top of another tile may be filled,
   // and the filling can happen from either side.
-  for each(var t in alltiles) if(!t.below.length) t.canFillInitially = true;
   while(values.length) {
     var value = values.pop();
     var tile1 = fillTile(alltiles, value);
@@ -224,7 +223,6 @@ function isFilled(t) { return t.isFilled; } // for use with Array.every/Array.so
 function markNotLeftFillable(tile) {
   if(tile.tilesFilledToLeft) return;
   tile.tilesFilledToLeft = true;
-  tile.canFillInitially = false;
   for each(var l in tile.left) markNotLeftFillable(l);
 }
 
