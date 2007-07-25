@@ -87,11 +87,13 @@ function Tile(x, y, z) {
   // in the layer immediately above.
   this.tilesAbove = [];
 
+  // Used when setting the tiles' values to give a winnable grid ("filling" it)
   this.isFilled = false; // xxx could just do !isNaN(tile.value)
-  // Used when "filling" the grid: assigning values to the Tile objects such
-  // that the result is a winnable game.
-  this.canFillFromRight = true; // true iff there are no filed tiles in a recursive trawl of .right
-  this.canFillFromLeft = true;
+  // true iff any of a recursive traversal of .right have .isFilled set true.
+  // Implies that this tile can now only be filled when all its .right tiles
+  // have all been filled.
+  this.tilesFilledToRight = false;
+  this.tilesFilledToLeft = false;
   this.canFillNow = false;
   this.canFillInitially = false;
 }
@@ -161,7 +163,6 @@ function _recordTileAsAdjacent(grid, tile, listFieldName, countFieldName, dx, dy
 // function just assigns them values.
 function fillGrid(alltiles) {
   const values = getTileValues(alltiles.length);
-  dump("values.length:" +values.length+"\n")
   // Initially, only tiles which are not on top of another tile may be filled,
   // and the filling can happen from either side.
   for each(var t in alltiles) if(!t.below.length) t.canFillInitially = true;
@@ -210,7 +211,7 @@ function checkIfTilesAboveAreNowFillable(tile) {
   for each(var a in tile.tilesAbove) {
     // don't mark it if another in its lattice has been filled (it'll get marked
     // as a left or right adjacent eventually)
-    if(a.allBelowAreFilled && a.canFillFromRight && a.canFillFromLeft) a.canFillNow = true;
+    if(a.allBelowAreFilled && !a.tilesFilledToRight && !a.tilesFilledToLeft) a.canFillNow = true;
   }
 }
 
@@ -225,15 +226,15 @@ function markLeftsIfNowFillable(tile) {
 function isFilled(t) { return t.isFilled; } // for use with Array.every/Array.some
 
 function markNotLeftFillable(tile) {
-  if(!tile.canFillFromLeft) return;
-  tile.canFillFromLeft = false;
+  if(tile.tilesFilledToLeft) return;
+  tile.tilesFilledToLeft = true;
   tile.canFillInitially = false;
   for each(var l in tile.left) markNotLeftFillable(l);
 }
 
 function markNotRightFillable(tile) {
-  if(!tile.canFillFromRight) return;
-  tile.canFillFromRight = false;
+  if(tile.tilesFilledToRight) return;
+  tile.tilesFilledToRight = true;
   tile.canFillInitially = false;
   for each(var r in tile.right) markNotRightFillable(r);
 }
