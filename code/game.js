@@ -94,13 +94,15 @@ function Tile(x, y, z) {
   this.canFillFromLeft = true;
   this.canFillNow = false;
   this.canFillInitially = false;
-  this.allBelowAreFilled = false;
 }
 Tile.prototype = {
   get isFree() {
     return !this.numAboveBlockers && (!this.numLeftBlockers || !this.numRightBlockers);
   },
   toString: function() { return this.tileid; },
+  get allBelowAreFilled() {
+    return Array.every(this.below, isFilled);
+  },
   get isFillable() {
     return !this.isFilled && (this.canFillNow || this.canFillInitially) && this.allBelowAreFilled;
   }
@@ -162,7 +164,7 @@ function fillGrid(alltiles) {
   dump("values.length:" +values.length+"\n")
   // Initially, only tiles which are not on top of another tile may be filled,
   // and the filling can happen from either side.
-  for each(var t in alltiles) if(!t.below.length) t.canFillInitially = t.allBelowAreFilled = true;
+  for each(var t in alltiles) if(!t.below.length) t.canFillInitially = true;
   while(values.length) {
     var value = values.pop();
     var tile1 = fillTile(alltiles, value);
@@ -206,9 +208,6 @@ function markNewlyFillable(tile) {
 
 function checkIfTilesAboveAreNowFillable(tile) {
   for each(var a in tile.tilesAbove) {
-    // update the field, then really check it
-    if(a.allBelowAreFilled) continue; // in a lattice, see below
-    a.allBelowAreFilled = Array.every(a.below, isFilled); // update field
     // don't mark it if another in its lattice has been filled (it'll get marked
     // as a left or right adjacent eventually)
     if(a.allBelowAreFilled && a.canFillFromRight && a.canFillFromLeft) a.canFillNow = true;
