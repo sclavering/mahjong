@@ -209,15 +209,6 @@ function markNewlyFillableAsSecondOfPair(tile) {
 function markNewlyFillable(tile) {
   markRightsIfNowFillable(tile);
   markLeftsIfNowFillable(tile);
-  checkIfTilesAboveAreNowFillable(tile);
-}
-
-function checkIfTilesAboveAreNowFillable(tile) {
-  for each(var a in tile.tilesAbove) {
-    // don't mark it if another in its lattice has been filled (it'll get marked
-    // as a left or right adjacent eventually)
-    if(a.allBelowAreFilled && !a.tilesFilledToRight && !a.tilesFilledToLeft) a.canFillNow = true;
-  }
 }
 
 function markRightsIfNowFillable(tile) {
