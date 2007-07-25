@@ -22,7 +22,7 @@ const ui = {
 
   // pass a z-y-x indexed array of Tile objects and nulls
   show: function(grid) {
-    this._selected = null;
+    this._select(null);
     const d = grid.length, h = grid[0].length, w = grid[0][0].length;
     const dim = this._dimensions;
     if(!(dim[0] == w && dim[1] == h && dim[2] == d)) this._resize(w, h, d);
@@ -35,11 +35,13 @@ const ui = {
     this._dimensions = [w, h, d];
     const pxwidth = w * kTileHalfWidth;
     const pxheight = h * kTileHalfHeight;
-    // two contexts per layer (one for tiles, one for their edges/shadows)
+    // We use two <canvas>es per layer (one for tiles, one for their shadows).
+    // Highlights for selected tiles are drawn into the shadow <canvas> for the
+    // layer above, so an extra one is needed.
     // Since the offsets used to mimic 3D are both negative, the first canvas
     // (for the shadows of the bottom layer) gets the *most* offset.  We then
     // only reduce it between a layer's shadow canvas and its faces canvas.
-    for(var z = 0, offset = d; z != d * 2; ++z, offset -= z % 2) {
+    for(var z = 0, offset = d; z != d * 2 + 1; ++z, offset -= z % 2) {
       // positioning <html:canvas>es in a <stack> doesn't work well, so..
       var box = document.createElement("box");
       box.top = offset * -kLayerYOffset;
@@ -65,15 +67,9 @@ const ui = {
 
   _drawTile: function(tile) {
     if(!tile) return;
-    var [x, y] = this._drawTileFace(tile);
-    // draw a shadow, badly
-    const ctx1 = this._contexts[tile.z * 2];
-    ctx1.fillStyle = "rgba(128, 128, 128, 0.3)";
-    ctx1.fillRect(x, y, kTileWidth, kTileHeight);
-  },
-
-  _drawTileFace: function(tile) {
-    if(!tile) return null;
+    // draw shadow
+    this._rect(tile, 0, "rgba(128, 128, 128, 0.3)");
+    // draw face
     var [x, y] = this._getTileVisualCoords(tile);
     const ctx2 = this._contexts[tile.z * 2 + 1];
     ctx2.clearRect(x, y, kTileWidth, kTileHeight);
@@ -81,19 +77,26 @@ const ui = {
     // draw an extra border, since the tiles lack left borders
     ctx2.fillStyle = "black";
     ctx2.strokeRect(x + 0.5, y + 0.5, kTileWidth - 1, kTileHeight - 1);
-    return [x, y];
   },
 
   _select: function(tile) {
-    this._drawTileFace(this._selected);
+    // 2 means the shadow <canvas> for the layer above
+    this._rect(this._selected, 2, "")
+    this._rect(tile, 2, "rgba(75%, 75%, 100%, 0.4)");
     this._selected = tile;
-    if(!tile) return;
-    var [x, y] = this._getTileVisualCoords(tile);
-    const ctx = this._contexts[tile.z * 2 + 1];
-    ctx.fillStyle = "rgba(10%, 10%, 100%, 0.3)"
-    ctx.fillRect(x, y, kTileWidth, kTileHeight);
   },
   _selected: null, // a Tile, or null
+
+  _rect: function(tile, zTweak, fillStyle) {
+    if(!tile) return;
+    const ctx = this._contexts[2 * tile.z + zTweak];
+    const x = tile.x * kTileHalfWidth, y = tile.y * kTileHalfHeight;
+    ctx.clearRect(x, y, kTileWidth, kTileHeight);
+    if(!fillStyle) return
+    ctx.fillStyle = fillStyle;
+    dump("filling "+(2 * tile.z + zTweak)+" with "+fillStyle+"\n")
+    ctx.fillRect(x, y, kTileWidth, kTileHeight);
+  },
 
   _getTileVisualCoords: function(tile) {
     return [tile.x * kTileHalfWidth, tile.y * kTileHalfHeight];
@@ -106,11 +109,8 @@ const ui = {
   },
 
   _undrawTile: function(tile) {
-    var [x, y] = this._getTileVisualCoords(tile);
-    // clear tile face then clear shadow
-    const ix = tile.z * 2, facectx = this._contexts[ix + 1], ectx = this._contexts[ix];
-    facectx.clearRect(x, y, kTileWidth, kTileHeight);
-    ectx.clearRect(x, y, kTileWidth, kTileHeight);
+    this._rect(tile, 1, ""); // clear face
+    this._rect(tile, 0, ""); // clear shadow
   },
 
   onPairUnremoved: function(tileA, tileB) {
