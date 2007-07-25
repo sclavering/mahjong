@@ -22,6 +22,7 @@ const ui = {
 
   // pass a z-y-x indexed array of Tile objects and nulls
   show: function(grid) {
+    this._selected = null;
     const d = grid.length, h = grid[0].length, w = grid[0][0].length;
     const dim = this._dimensions;
     if(!(dim[0] == w && dim[1] == h && dim[2] == d)) this._resize(w, h, d);
@@ -94,9 +95,9 @@ const ui = {
   },
 
   onPairRemoved: function(tileA, tileB) {
+    this._select(null);
     this._undrawTile(tileA);
     this._undrawTile(tileB);
-    this._select(null);
   },
 
   _undrawTile: function(tile) {
@@ -108,9 +109,9 @@ const ui = {
   },
 
   onPairUnremoved: function(tileA, tileB) {
+    this._select(null);
     this._drawTile(tileA);
     this._drawTile(tileB);
-    this._select(null);
   },
 
   onclick: function(event) {
