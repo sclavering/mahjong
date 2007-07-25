@@ -173,9 +173,14 @@ function fillGrid(alltiles) {
   while(values.length) {
     var value = values.pop();
     var fillable = [t for each(t in alltiles) if(t.isFillable)];
-    // select and remove a single tile
-    var tile1 = fillable.splice(randomInt(fillable.length), 1)[0];
-    dump("chose tile1 "+tile1+" leaving "+fillable+"\n");
+    // select a tile to fill
+    var tile1 = fillable[randomInt(fillable.length)];
+    dump("chose tile1 "+tile1+" from "+fillable+"\n");
+    fillTile(tile1, value);
+    // Remove no-longer-fillable tiles (often most members of tile1's lattice).
+    // Don't regenerate the list from scratch, because that could include tiles
+    // which can be filled, but not with tile1's pair (eg. those on top of it).
+    fillable = [t for each(t in fillable) if(t.isFillable)];
     // if the tile is the first in its lattice to be filled, it can legally be
     // paired with one of its adjacents
     if(!tile1.tilesFilledToLeft && !tile1.tilesFilledToRight)
@@ -183,7 +188,6 @@ function fillGrid(alltiles) {
     // select a second tile, and actually fill them both
     var tile2 = fillable[randomInt(fillable.length)];
     dump("chose tile2 "+tile2+" from "+fillable+"\n");
-    fillTile(tile1, value);
     fillTile(tile2, value);
   }
 }
