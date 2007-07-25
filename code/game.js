@@ -172,36 +172,30 @@ function fillGrid(alltiles) {
   // and the filling can happen from either side.
   while(values.length) {
     var value = values.pop();
-    var tile1 = fillTile(alltiles, value);
-    markNewlyFillableAsSecondOfPair(tile1);
-    var tile2 = fillTile(alltiles, value);
+    var fillable = [t for each(t in alltiles) if(t.isFillable)];
+    // select and remove a single tile
+    var tile1 = fillable.splice(randomInt(fillable.length), 1)[0];
+    dump("choose tile1 "+tile1+" from "+fillable+"\n");
+    // if the tile is the first in its lattice to be filled, it can legally be
+    // paired with one of its adjacents
+    if(!tile1.tilesFilledToLeft && !tile1.tilesFilledToRight)
+      fillable = Array.concat(fillable, tile1.left, tile1.right);
+    // select a second tile, and actually fill them both
+    var tile2 = fillable[randomInt(fillable.length)];
+    dump("choose tile2 "+tile2+" from "+fillable+"\n");
+    fillTile(tile1, value);
+    fillTile(tile2, value);
     markNewlyFillable(tile1);
     markNewlyFillable(tile2);
   }
 }
 
-function fillTile(tiles, value) {
-  const fillable = [t for each(t in tiles) if(t.isFillable)];
-  dump("fillable:"+fillable.length+": "+fillable+"\n")
-  const tile = fillable[randomInt(fillable.length)];
+function fillTile(tile, value) {
   tile.value = value;
-  dump("filled: "+tile+" "+value+"\n")
   tile.isFilled = true;
-  // Mark tiles in the same row/lattice as no longer fillable from one side.
-  // Also, clear the .canFillInitially fields, since filling any of these tiles
-  // immediately would leaves those between them and |tile| unfillable.
   markNotLeftFillable(tile);
   markNotRightFillable(tile);
   return tile;
-}
-
-
-// Most tiles become fillable only after a pair is filled, but there are a few
-// circumstances where an adjacent pair can be filled together, and this marks
-// tiles such that those cases can occur.
-function markNewlyFillableAsSecondOfPair(tile) {
-  if(!Array.some(tile.left, isFilled)) markRightsIfNowFillable(tile);
-  if(!Array.some(tile.right, isFilled)) markLeftsIfNowFillable(tile);
 }
 
 // Mark newly fillable after both tiles of a pair have been filled
