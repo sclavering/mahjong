@@ -75,15 +75,16 @@ const ui = {
     return [x, y];
   },
 
-  highlightTile: function(tile) {
-    this._drawTileFace(this._highlighted);
-    this._highlighted = tile;
+  _select: function(tile) {
+    this._drawTileFace(this._selected);
+    this._selected = tile;
+    if(!tile) return;
     var [x, y] = this._getTileVisualCoords(tile);
     const ctx = this._contexts[tile.z * 2 + 1];
     ctx.fillStyle = "rgba(10%, 10%, 100%, 0.3)"
     ctx.fillRect(x, y, kTileWidth, kTileHeight);
   },
-  _highlighted: null, // a Tile, or null
+  _selected: null, // a Tile, or null
 
   _getTileVisualCoords: function(tile) {
     // +1 to x/y gives a visual border and space for the layer offsets to use up
@@ -95,7 +96,7 @@ const ui = {
   onPairRemoved: function(tileA, tileB) {
     this._undrawTile(tileA);
     this._undrawTile(tileB);
-    this._highlighted = null;
+    this._select(null);
   },
 
   _undrawTile: function(tile) {
@@ -109,7 +110,7 @@ const ui = {
   onPairUnremoved: function(tileA, tileB) {
     this._drawTile(tileA);
     this._drawTile(tileB);
-    this.highlightTile(null);
+    this._select(null);
   },
 
   onclick: function(event) {
@@ -125,7 +126,15 @@ const ui = {
       var y = Math.floor(layerPixelY / kTileHalfHeight) - 1;
       dump("click: ("+pixelX+","+pixelY+") == ("+layerPixelX+","+layerPixelY+") in layer "+z);
       dump(" -- logical tile ("+x+","+y+","+z+")\n");
-      if(game.onTileClicked(x, y, z)) break;
+      var tile = game.getTileAt(x, y, z);
+      if(!tile) continue;
+      if(tile.isFree) {
+        if(tile == this._selected) this._select(null);
+        else if(!game.doRemovePair(tile, this._selected)) this._select(tile);
+      }
+      return; // bail out once a tile is found
     }
+    // clicking in empty space clears the selection
+    this._select(null);
   }
 }

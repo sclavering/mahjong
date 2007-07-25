@@ -17,7 +17,6 @@ Game.prototype = {
     this._undoHistoryIx = this._undoHistory.length;
     this._removeTile(tileA);
     this._removeTile(tileB);
-    this._selectedTile = null;
     ui.onPairRemoved(tileA, tileB);
     return true;
   },
@@ -27,7 +26,6 @@ Game.prototype = {
     const pair = this._undoHistory[-- this._undoHistoryIx];
     this._unremoveTile(pair[0]);
     this._unremoveTile(pair[1]);
-    this._selectedTile = null;
     ui.onPairUnremoved(pair[0], pair[1]);
   },
 
@@ -36,7 +34,6 @@ Game.prototype = {
     const pair = this._undoHistory[this._undoHistoryIx ++];
     this._removeTile(pair[0]);
     this._removeTile(pair[1]);
-    this._selectedTile = null;
     ui.onPairRemoved(pair[0], pair[1]);
   },
 
@@ -54,26 +51,16 @@ Game.prototype = {
     for each(t in tile.below) ++t.numAboveBlockers;
   },
 
-  getTileAt: function(x, y, z) {
+  // Returns the tile with (x,y,z) as its top-left corner
+  _getTileAt: function(x, y, z) {
     const g = this.grid;
     return (g[z] && g[z][y] && g[z][y][x]) || null;
   },
 
-  // a Tile, or null
-  _selectedTile: null,
-
-  // returns true iff there is a (corner of a) tile at the coordinates
-  onTileClicked: function(x, y, z) {
-    // the provided coords may be for the right side or bottom half (or both) of the tile
-    const tile = this.getTileAt(x, y, z) || this.getTileAt(x, y - 1, z)
-        || this.getTileAt(x - 1, y, z) || this.getTileAt(x - 1, y - 1, z);
-    if(tile) dump("found actual tile at ("+tile.x+","+tile.y+","+tile.z+")\n");
-    if(!tile || !tile.isFree || tile == this._selectedTile) return false;
-    if(!this.doRemovePair(tile, this._selectedTile)) {
-      this._selectedTile = tile;
-      ui.highlightTile(tile);
-    }
-    return true;
+  // Returns a tile given the grid coords of any of its corners
+  getTileAt: function(x, y, z) {
+    return this._getTileAt(x, y, z) || this._getTileAt(x, y - 1, z)
+        || this._getTileAt(x - 1, y, z) || this._getTileAt(x - 1, y - 1, z);
   }
 }
 
