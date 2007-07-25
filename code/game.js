@@ -95,7 +95,6 @@ function Tile(x, y, z) {
   this.tilesFilledToRight = false;
   this.tilesFilledToLeft = false;
   this.canFillNow = false;
-  this.canFillInitially = false;
 }
 Tile.prototype = {
   get isFree() {
@@ -106,7 +105,13 @@ Tile.prototype = {
     return Array.every(this.below, isFilled);
   },
   get isFillable() {
-    return !this.isFilled && (this.canFillNow || this.canFillInitially) && this.allBelowAreFilled;
+    return !this.isFilled && this.allBelowAreFilled && (
+      // two cases: either we're adjacent to a filled tile
+        this.canFillNow
+      // or we're in an a lattice where no tiles have yet been placed (so the
+      // first tile their can go anywhere)
+      || (!this.tilesFilledToRight && !this.tilesFilledToLeft)
+    );
   }
 }
 
@@ -235,7 +240,6 @@ function markNotLeftFillable(tile) {
 function markNotRightFillable(tile) {
   if(tile.tilesFilledToRight) return;
   tile.tilesFilledToRight = true;
-  tile.canFillInitially = false;
   for each(var r in tile.right) markNotRightFillable(r);
 }
 
