@@ -94,23 +94,19 @@ function Tile(x, y, z) {
   // have all been filled.
   this.tilesFilledToRight = false;
   this.tilesFilledToLeft = false;
-  this.canFillNow = false;
 }
 Tile.prototype = {
   get isFree() {
     return !this.numAboveBlockers && (!this.numLeftBlockers || !this.numRightBlockers);
   },
   toString: function() { return this.tileid; },
-  get allBelowAreFilled() {
-    return Array.every(this.below, isFilled);
-  },
   get isFillable() {
-    return !this.isFilled && this.allBelowAreFilled && (
-      // two cases: either we're adjacent to a filled tile
-        this.canFillNow
-      // or we're in an a lattice where no tiles have yet been placed (so the
-      // first tile their can go anywhere)
-      || (!this.tilesFilledToRight && !this.tilesFilledToLeft)
+    return !this.isFilled && allFilled(this.below) && (
+      // either this is the first tile in its lattice to be filled
+      (!this.tilesFilledToRight && !this.tilesFilledToLeft)
+      // or if the lattice has been partly filled:
+      || allFilled(this.left)
+      || allFilled(this.right)
     );
   }
 }
@@ -120,6 +116,10 @@ function irange(N) {
   for(var i = 0; i < N; ++i) yield i;
 }
 
+function allFilled(tiles) {
+  for each(var t in tiles) if(!t.isFilled) return false;
+  return true;
+}
 
 // Template is a z-y-x indexed array of bools indicating tile positions
 function createGrid(templateArray) {
@@ -185,8 +185,6 @@ function fillGrid(alltiles) {
     dump("choose tile2 "+tile2+" from "+fillable+"\n");
     fillTile(tile1, value);
     fillTile(tile2, value);
-    markNewlyFillable(tile1);
-    markNewlyFillable(tile2);
   }
 }
 
@@ -197,22 +195,6 @@ function fillTile(tile, value) {
   markNotRightFillable(tile);
   return tile;
 }
-
-// Mark newly fillable after both tiles of a pair have been filled
-function markNewlyFillable(tile) {
-  markRightsIfNowFillable(tile);
-  markLeftsIfNowFillable(tile);
-}
-
-function markRightsIfNowFillable(tile) {
-  for each(var t in tile.right) if(Array.every(t.left, isFilled)) t.canFillNow = true;
-}
-
-function markLeftsIfNowFillable(tile) {
-  for each(var t in tile.left) if(Array.every(t.right, isFilled)) t.canFillNow = true;
-}
-
-function isFilled(t) { return t.isFilled; } // for use with Array.every/Array.some
 
 function markNotLeftFillable(tile) {
   if(tile.tilesFilledToLeft) return;
