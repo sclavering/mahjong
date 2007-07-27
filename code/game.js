@@ -1,7 +1,8 @@
 function Game(templateGrid) {
   this._history = [];
   [this.grid, this.alltiles] = createGrid(templateGrid);
-  fillGrid(this.alltiles);
+  // keep trying to fill until successful
+  while(!fillGrid(this.alltiles)) for each(t in this.alltiles) t.reset();
 }
 
 Game.prototype = {
@@ -108,6 +109,9 @@ Tile.prototype = {
       || allFilled(this.left)
       || allFilled(this.right)
     );
+  },
+  reset: function() {
+    this.tilesFilledToRight = this.tilesFilledToLeft = this.isFilled = false;
   }
 }
 
@@ -166,6 +170,10 @@ function _recordTileAsAdjacent(grid, tile, listFieldName, countFieldName, dx, dy
 // Creates a game that is winnable (in at least one way) by repeatedly adding
 // pairs to the empty grid.  The tiles are actually in a grid already, and this
 // function just assigns them values.
+// Returns true if successful, and false if it runs out of fillable tiles. This
+// can happen even with correct layouts, e.g. if it gets to the point where the
+// only two unfilled tiles are one on top of the other.  The caller should thus
+// try again.
 function fillGrid(alltiles) {
   const values = getTileValues(alltiles.length);
   // Initially, only tiles which are not on top of another tile may be filled,
@@ -173,6 +181,7 @@ function fillGrid(alltiles) {
   while(values.length) {
     var value = values.pop();
     var fillable = [t for each(t in alltiles) if(t.isFillable)];
+    if(!fillable.length) return false;
     // select a tile to fill
     var tile1 = fillable[randomInt(fillable.length)];
     dump("chose tile1 "+tile1+" from "+fillable+"\n");
@@ -181,6 +190,7 @@ function fillGrid(alltiles) {
     // Don't regenerate the list from scratch, because that could include tiles
     // which can be filled, but not with tile1's pair (eg. those on top of it).
     fillable = [t for each(t in fillable) if(t.isFillable)];
+    if(!fillable.length) return null;
     // if the tile is the first in its lattice to be filled, it can legally be
     // paired with one of its adjacents
     if(!tile1.tilesFilledToLeft && !tile1.tilesFilledToRight)
@@ -190,6 +200,7 @@ function fillGrid(alltiles) {
     dump("chose tile2 "+tile2+" from "+fillable+"\n");
     fillTile(tile2, value);
   }
+  return true;
 }
 
 function fillTile(tile, value) {
