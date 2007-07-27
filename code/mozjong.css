@@ -1,0 +1,23 @@
+#layoutpicker {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background: white;
+  color: black;
+}
+
+/* basically want a file-manager-like grid of tiles */
+.layoutbutton {
+  border: none !important;
+  margin: none !important;
+  width: 12em !important;
+  padding: 1em;
+  background: white;
+  color: black;
+}
+
+.layoutbutton:hover {
+  background: highlight;
+  color: highlighttext;
+}

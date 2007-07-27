@@ -94,7 +94,6 @@ const ui = {
     ctx.clearRect(x, y, kTileWidth, kTileHeight);
     if(!fillStyle) return
     ctx.fillStyle = fillStyle;
-    dump("filling "+(2 * tile.z + zTweak)+" with "+fillStyle+"\n")
     ctx.fillRect(x, y, kTileWidth, kTileHeight);
   },
 
