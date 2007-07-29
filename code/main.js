@@ -63,12 +63,13 @@ function _renderLayoutPreview(template, ctx) {
 
 function showLayoutPicker() {
   document.getElementById("gamearea").hidden = true;
-  document.getElementById("layoutpicker").hidden = false;
+  // display:box seems to break the xul hidden= attribute/property
+  document.getElementById("layoutpicker").className = "";
 }
 
 function selectLayout(event) {
   if(event.target.localName != "button") return;
-  document.getElementById("layoutpicker").hidden = true;
+  document.getElementById("layoutpicker").className = "hidden";;
   document.getElementById("gamearea").hidden = false;
   gLayoutId = event.target.layout_id;
   newGame();

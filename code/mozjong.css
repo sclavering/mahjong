@@ -1,3 +1,7 @@
+.hidden {
+  display: none !important;
+}
+
 #layoutpicker {
   display: block;
   width: 100%;
