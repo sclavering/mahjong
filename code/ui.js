@@ -7,6 +7,8 @@ const kTileHalfHeight = 40;
 const kLayerXOffset = -4;
 const kLayerYOffset = -4;
 
+const kUiHighlightLayerOffset = 2; // shadow layer for the layer above the tile
+
 const ui = {
   _images: {},   // <html:img>s for drawing
   _contexts: [], // array of nsIDOMCanvasRenderingContext2D
@@ -79,10 +81,22 @@ const ui = {
     ctx2.strokeRect(x + 0.5, y + 0.5, kTileWidth - 1, kTileHeight - 1);
   },
 
+  showHint: function(tiles) {
+    this._rects(this._hintTiles, "");
+    this._hintTiles = tiles;
+    this._rects(tiles, "rgba(90%, 90%, 0%, 0.4)");
+  },
+  _rects: function(tiles, colour) {
+    if(!tiles) return;
+    for each(var t in tiles) this._rect(t, kUiHighlightLayerOffset, colour);
+  },
+  _hintTiles: [],
+
   _select: function(tile) {
-    // 2 means the shadow <canvas> for the layer above
-    this._rect(this._selected, 2, "")
-    this._rect(tile, 2, "rgba(75%, 75%, 100%, 0.4)");
+    // perhaps not optimal - clears the hint as you select the first tile
+    this.showHint(null);
+    this._rect(this._selected, kUiHighlightLayerOffset, "");
+    this._rect(tile, kUiHighlightLayerOffset, "rgba(75%, 75%, 100%, 0.4)");
     this._selected = tile;
   },
   _selected: null, // a Tile, or null

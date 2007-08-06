@@ -80,3 +80,6 @@ function newGame() {
   ui.show(game.grid);
 }
 
+function hint() {
+  ui.showHint(game.getHint());
+}

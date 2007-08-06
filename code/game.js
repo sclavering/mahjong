@@ -39,6 +39,7 @@ Game.prototype = {
   },
 
   _removeTile: function(tile) {
+    this._clearHints();
     this.grid[tile.z][tile.y][tile.x] = null;
     for each(var t in tile.left) --t.numRightBlockers;
     for each(t in tile.right) --t.numLeftBlockers;
@@ -46,6 +47,7 @@ Game.prototype = {
   },
 
   _unremoveTile: function(tile) {
+    this._clearHints();
     this.grid[tile.z][tile.y][tile.x] = tile;
     for each(var t in tile.left) ++t.numRightBlockers;
     for each(t in tile.right) ++t.numLeftBlockers;
@@ -62,6 +64,33 @@ Game.prototype = {
   getTileAt: function(x, y, z) {
     return this._getTileAt(x, y, z) || this._getTileAt(x, y - 1, z)
         || this._getTileAt(x - 1, y, z) || this._getTileAt(x - 1, y - 1, z);
+  },
+
+
+  // returns an array of two or more pairable tiles
+  getHint: function() {
+    if(!this._hints) this._hints = this._computeHints();
+    if(!this._hints.length) return null;
+    this._hintIndex %= this._hints.length;
+    return this._hints[this._hintIndex++];
+  },
+
+  _clearHints: function() {
+    this._hintIndex = 0;
+    this._hints = null;
+  },
+
+  _hintIndex: 0,
+  _hints: null,
+
+  _computeHints: function() {
+    const tiles = [t for each(t in this.alltiles) if(t.isFree)];
+    const sets = [];
+    for each(var t in tiles) {
+      if(sets[t.value]) sets[t.value].push(t);
+      else sets[t.value] = [t];
+    }
+    return [set for each(set in sets) if(set.length > 1)];
   }
 }
 

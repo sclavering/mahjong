@@ -78,6 +78,7 @@
     <toolbarbutton id="newbtn" label="New" oncommand="newGame();"/>
     <toolbarbutton id="undobtn" label="Undo" oncommand="game.undo();"/>
     <toolbarbutton id="redobtn" label="Redo" oncommand="game.redo();"/>
+    <toolbarbutton id="hintbtn" label="Hint" oncommand="hint();"/>
   </toolbar>
 </toolbox>
 
