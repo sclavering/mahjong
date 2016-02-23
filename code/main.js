@@ -6,13 +6,6 @@ window.onload = function() {
   layouts.init();
   buildLayoutPicker();
   ui.init();
-  // need the timeout to make the later window.resizeTo call do something
-  setTimeout(delayed_onload, 0);
-}
-
-function delayed_onload() {
-  // triggers a new game
-  document.getElementById("layoutbtn").selectedIndex = 0;
 }
 
 function buildLayoutPicker() {
