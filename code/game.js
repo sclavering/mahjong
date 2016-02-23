@@ -90,7 +90,7 @@ Game.prototype = {
       if(sets[t.value]) sets[t.value].push(t);
       else sets[t.value] = [t];
     }
-    return sets.filter(s => set.length > 1);
+    return sets.filter(s => s.length > 1);
   }
 }
 

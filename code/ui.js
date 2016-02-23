@@ -1,5 +1,3 @@
-const HTMLns = "http://www.w3.org/1999/xhtml";
-
 const kTileWidth = 56;
 const kTileHalfWidth = 28;
 const kTileHeight = 80;
@@ -11,7 +9,7 @@ const kUiHighlightLayerOffset = 2; // shadow layer for the layer above the tile
 
 const ui = {
   _images: {},   // <html:img>s for drawing
-  _contexts: [], // array of nsIDOMCanvasRenderingContext2D
+  _contexts: [], // array of CanvasRenderingContext2D
   _dimensions: [0,0,0],  // width,height,depth last used
 
   init: function() {
@@ -44,16 +42,13 @@ const ui = {
     // (for the shadows of the bottom layer) gets the *most* offset.  We then
     // only reduce it between a layer's shadow canvas and its faces canvas.
     for(var z = 0, offset = d; z != d * 2 + 1; ++z, offset -= z % 2) {
-      // positioning <html:canvas>es in a <stack> doesn't work well, so..
-      var box = document.createElement("box");
-      box.top = offset * -kLayerYOffset;
-      box.left = offset * -kLayerXOffset;
-      this._stack.appendChild(box);
-      // and the <canvas> external (.style.*) dimensions are 0 in XUL unless set
-      var canvas = document.createElementNS(HTMLns, "canvas");
-      box.appendChild(canvas);
+      var canvas = document.createElement("canvas");
+      canvas.style.position = "absolute";
       canvas.style.width = (canvas.width = pxwidth) +"px";
       canvas.style.height = (canvas.height = pxheight) + "px";
+      canvas.style.top = (offset * -kLayerYOffset) + "px";
+      canvas.style.left = (offset * -kLayerXOffset) + "px";
+      this._stack.appendChild(canvas);
       this._contexts[z] = canvas.getContext("2d");
     }
     window.sizeToContent();
@@ -133,8 +128,9 @@ const ui = {
   },
 
   onclick: function(event) {
-    var pixelX = event.clientX - this._stack.boxObject.x;
-    var pixelY = event.clientY - this._stack.boxObject.y;
+    const rect = this._stack.getBoundingClientRect();
+    var pixelX = event.clientX - rect.left;
+    var pixelY = event.clientY - rect.top;
     const depth = game.grid.length;
     for(var z = depth - 1; z >= 0; --z, pixelX += kLayerXOffset, pixelY += kLayerYOffset) {
       var x = Math.floor(pixelX / kTileHalfWidth);
