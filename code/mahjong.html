@@ -1,26 +1,24 @@
-<?xml version="1.0"?>
+<!DOCTYPE html>
 
-<?xml-stylesheet href="chrome://global/skin/"?>
-<?xml-stylesheet href="chrome://mozjong/content/mozjong.css"?>
+<html>
 
-<!-- <!DOCTYPE overlay SYSTEM "chrome://mozjong/locale/"> -->
+<head>
+<meta charset="utf-8">
 
-<window
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    width="300"
-    height="300"
-    title="Mozjong"
-    >
+<link rel="stylesheet" href="mozjong.css">
 
-<script src="ui.js"/>
-<script type="application/javascript;version=1.7" src="game.js"/>
-<script src="layouts.js"/>
-<script src="main.js"/>
+<script src="ui.js"></script>
+<script src="game.js"></script>
+<script src="layout_data.js"></script>
+<script src="layouts.js"></script>
+<script src="main.js"></script>
 
-<nonsenseelement style="display:none"
-    id="html_img_elements"
-    xmlns="http://www.w3.org/1999/xhtml"
-    >
+<title>Mahjong</title>
+</head>
+
+<body>
+
+<div style="display:none" id="html_img_elements">
   <img id="edge-lt" src="images/edge-lt.png"/>
   <img id="edge-lb" src="images/edge-lb.png"/>
   <img id="edge-c" src="images/edge-c.png"/>
@@ -70,21 +68,20 @@
   <img id="tile-40" src="images/tile_40.png"/>
   <img id="tile-41" src="images/tile_41.png"/>
   <img id="tile-42" src="images/tile_42.png"/>
-</nonsenseelement>
+</div>
 
-<toolbox id="toolbox">
-  <toolbar id="toolbar">
-    <toolbarbutton id="layoutbtn" label="Layout..." oncommand="showLayoutPicker();"/>
-    <toolbarbutton id="newbtn" label="New" oncommand="newGame();"/>
-    <toolbarbutton id="undobtn" label="Undo" oncommand="game.undo();"/>
-    <toolbarbutton id="redobtn" label="Redo" oncommand="game.redo();"/>
-    <toolbarbutton id="hintbtn" label="Hint" oncommand="hint();"/>
-  </toolbar>
-</toolbox>
+<div>
+    <input type="button" id="layoutbtn" value="Layout..." onclick="showLayoutPicker();">
+    <input type="button" id="newbtn" value="New" onclick="newGame();">
+    <input type="button" id="undobtn" value="Undo" onclick="game.undo();">
+    <input type="button" id="redobtn" value="Redo" onclick="game.redo();">
+    <input type="button" id="hintbtn" value="Hint" onclick="hint();">
+</div>
 
-<vbox align="center" pack="center" flex="1">
-  <block id="layoutpicker" flex="1" onclick="selectLayout(event);"/>
-  <stack id="gamearea"/>
-</vbox>
+<div>
+  <div id="layoutpicker" onclick="selectLayout(event);"></div>
+  <div id="gamearea" style="position: relative;"></div>
+</div>
 
-</window>
+</body>
+</html>
