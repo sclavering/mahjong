@@ -94,7 +94,6 @@ function Tile(x, y, z) {
   this.x = x;
   this.y = y;
   this.z = z;
-  this.tileid = x + "-" + y + "-" + z; // e.g. 3-5-2.  used as a fieldname when modelling a set
   // .face controls the tile's appearance, while .value affects pairing
   // They are initialised to NaN merely because NaN != NaN, and the true values
   // are set later (when filling in a board).
@@ -111,7 +110,6 @@ Tile.prototype = {
   get isFree() {
     return this.tilesAbove.every(t => t.is_removed) && (this.left.every(t => t.is_removed) || this.right.every(t => t.is_removed));
   },
-  toString: function() { return this.tileid; },
 };
 
 
