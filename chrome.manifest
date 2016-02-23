@@ -1,2 +1,0 @@
-overlay chrome://browser/content/browser.xul chrome://mozjong/content/overlay.xul
-content mozjong jar:mozjong.zip!/code/
