@@ -40,17 +40,13 @@ Game.prototype = {
   _removeTile: function(tile) {
     this._clearHints();
     this.grid[tile.z][tile.y][tile.x] = null;
-    for(let t of tile.left) --t.numRightBlockers;
-    for(let t of tile.right) --t.numLeftBlockers;
-    for(let t of tile.below) --t.numAboveBlockers;
+    tile.is_removed = true;
   },
 
   _unremoveTile: function(tile) {
     this._clearHints();
     this.grid[tile.z][tile.y][tile.x] = tile;
-    for(let t of tile.left) ++t.numRightBlockers;
-    for(let t of tile.right) ++t.numLeftBlockers;
-    for(let t of tile.below) ++t.numAboveBlockers;
+    tile.is_removed = false;
   },
 
   // Returns the tile with (x,y,z) as its top-left corner
@@ -99,21 +95,16 @@ function Tile(x, y, z) {
   this.y = y;
   this.z = z;
   this.tileid = x + "-" + y + "-" + z; // e.g. 3-5-2.  used as a fieldname when modelling a set
-  // the numbers of tiles to the left/right/above that prevent this tile being paired
-  this.numLeftBlockers = 0;
-  this.numRightBlockers = 0;
-  this.numAboveBlockers = 0;
   // .face controls the tile's appearance, while .value affects pairing
   // They are initialised to NaN merely because NaN != NaN, and the true values
   // are set later (when filling in a board).
   this.value = NaN;
   this.face = NaN;
+  this.is_removed = false;
   // Arrays of tiles that may be exposed when pairing this tile
   this.left = [];
   this.right = [];
   this.below = [];
-  // Only used when filling the grid.  List of Tile objects overlapping |this|
-  // in the layer immediately above.
   this.tilesAbove = [];
 
   // Used when setting the tiles' values to give a winnable grid ("filling" it)
@@ -126,7 +117,7 @@ function Tile(x, y, z) {
 }
 Tile.prototype = {
   get isFree() {
-    return !this.numAboveBlockers && (!this.numLeftBlockers || !this.numRightBlockers);
+    return this.tilesAbove.every(t => t.is_removed) && (this.left.every(t => t.is_removed) || this.right.every(t => t.is_removed));
   },
   toString: function() { return this.tileid; },
   reset: function() {
@@ -151,35 +142,34 @@ function createGrid(templateArray) {
   // set up the tiles' .left etc. fields.  don't use for-in because it gives indices as strings
   for(let t of all) {
     // a full tile's width to the left, and optionally up or down half a tile's height
-    _recordTileAsAdjacent(grid, t, 'left', 'numRightBlockers', -2, -1, 0);
-    _recordTileAsAdjacent(grid, t, 'left', 'numRightBlockers', -2,  0, 0);
-    _recordTileAsAdjacent(grid, t, 'left', 'numRightBlockers', -2, +1, 0);
+    _record_tile_as_adjacent(grid, t, 'left', -2, -1, 0);
+    _record_tile_as_adjacent(grid, t, 'left', -2,  0, 0);
+    _record_tile_as_adjacent(grid, t, 'left', -2, +1, 0);
     // as above, but to the right
-    _recordTileAsAdjacent(grid, t, 'right', 'numLeftBlockers', +2, -1, 0);
-    _recordTileAsAdjacent(grid, t, 'right', 'numLeftBlockers', +2,  0, 0);
-    _recordTileAsAdjacent(grid, t, 'right', 'numLeftBlockers', +2, +1, 0);
+    _record_tile_as_adjacent(grid, t, 'right', +2, -1, 0);
+    _record_tile_as_adjacent(grid, t, 'right', +2,  0, 0);
+    _record_tile_as_adjacent(grid, t, 'right', +2, +1, 0);
     // either a quater covered, half covered, or directly underneath
-    _recordTileAsAdjacent(grid, t, 'below', 'numAboveBlockers', -1, -1, -1);
-    _recordTileAsAdjacent(grid, t, 'below', 'numAboveBlockers', -1,  0, -1);
-    _recordTileAsAdjacent(grid, t, 'below', 'numAboveBlockers', -1, +1, -1);
-    _recordTileAsAdjacent(grid, t, 'below', 'numAboveBlockers',  0, +1, -1);
-    _recordTileAsAdjacent(grid, t, 'below', 'numAboveBlockers', +1, +1, -1);
-    _recordTileAsAdjacent(grid, t, 'below', 'numAboveBlockers', +1,  0, -1);
-    _recordTileAsAdjacent(grid, t, 'below', 'numAboveBlockers', +1, -1, -1);
-    _recordTileAsAdjacent(grid, t, 'below', 'numAboveBlockers',  0, -1, -1);
-    _recordTileAsAdjacent(grid, t, 'below', 'numAboveBlockers',  0,  0, -1);
+    _record_tile_as_adjacent(grid, t, 'below', -1, -1, -1);
+    _record_tile_as_adjacent(grid, t, 'below', -1,  0, -1);
+    _record_tile_as_adjacent(grid, t, 'below', -1, +1, -1);
+    _record_tile_as_adjacent(grid, t, 'below',  0, +1, -1);
+    _record_tile_as_adjacent(grid, t, 'below', +1, +1, -1);
+    _record_tile_as_adjacent(grid, t, 'below', +1,  0, -1);
+    _record_tile_as_adjacent(grid, t, 'below', +1, -1, -1);
+    _record_tile_as_adjacent(grid, t, 'below',  0, -1, -1);
+    _record_tile_as_adjacent(grid, t, 'below',  0,  0, -1);
   }
   return [grid, all];
 }
 
 // Used during grid setup. Adds a tile (if it exists) to one of another's adjacency lists
-function _recordTileAsAdjacent(grid, tile, listFieldName, countFieldName, dx, dy, dz) {
+function _record_tile_as_adjacent(grid, tile, listFieldName, dx, dy, dz) {
     const g = grid, x = tile.x + dx, y = tile.y + dy, z = tile.z + dz;
     const other = (g[z] && g[z][y] && g[z][y][x]) || null;
     if(!other) return;
     tile[listFieldName].push(other);
-    other[countFieldName] += 1;
-    if(listFieldName == "below") other.tilesAbove.push(tile); // ew
+    if(listFieldName === "below") other.tilesAbove.push(tile);
 }
 
 
