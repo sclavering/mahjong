@@ -1,15 +1,13 @@
 function Game(templateGrid) {
-  this._history = [];
+  // The Undo history is an array of [tile, tile] pairs, in order of removal.
+  // From _undoHistoryIx onward, it's actually the Redo "history".
+  this._undoHistory = [];
+  this._undoHistoryIx = 0;
   [this.grid, this.alltiles] = createGrid(templateGrid);
   GridFiller.run(this.alltiles);
 }
 
 Game.prototype = {
-  // The Undo history is an array of [tile, tile] pairs, in order of removal.
-  // From _undoHistoryIx onward, it's actually the Redo "history".
-  _undoHistory: [],
-  _undoHistoryIx: 0,
-
   doRemovePair: function(tileA, tileB) {
     if(!tileA || !tileB || tileA == tileB || tileA.value != tileB.value) return false;
     this._undoHistory.splice(this._undoHistoryIx); // discard anything undone
