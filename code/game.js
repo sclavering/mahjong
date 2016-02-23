@@ -2,7 +2,7 @@ function Game(templateGrid) {
   this._history = [];
   [this.grid, this.alltiles] = createGrid(templateGrid);
   // keep trying to fill until successful
-  while(!fillGrid(this.alltiles)) for each(t in this.alltiles) t.reset();
+  while(!fillGrid(this.alltiles)) for(let t of this.alltiles) t.reset();
 }
 
 Game.prototype = {
@@ -41,17 +41,17 @@ Game.prototype = {
   _removeTile: function(tile) {
     this._clearHints();
     this.grid[tile.z][tile.y][tile.x] = null;
-    for each(var t in tile.left) --t.numRightBlockers;
-    for each(t in tile.right) --t.numLeftBlockers;
-    for each(t in tile.below) --t.numAboveBlockers;
+    for(let t of tile.left) --t.numRightBlockers;
+    for(let t of tile.right) --t.numLeftBlockers;
+    for(let t of tile.below) --t.numAboveBlockers;
   },
 
   _unremoveTile: function(tile) {
     this._clearHints();
     this.grid[tile.z][tile.y][tile.x] = tile;
-    for each(var t in tile.left) ++t.numRightBlockers;
-    for each(t in tile.right) ++t.numLeftBlockers;
-    for each(t in tile.below) ++t.numAboveBlockers;
+    for(let t of tile.left) ++t.numRightBlockers;
+    for(let t of tile.right) ++t.numLeftBlockers;
+    for(let t of tile.below) ++t.numAboveBlockers;
   },
 
   // Returns the tile with (x,y,z) as its top-left corner
@@ -84,13 +84,13 @@ Game.prototype = {
   _hints: null,
 
   _computeHints: function() {
-    const tiles = [t for each(t in this.alltiles) if(t.isFree)];
+    const tiles = this.alltiles.filter(t => t.isFree);
     const sets = [];
-    for each(var t in tiles) {
+    for(let t of tiles) {
       if(sets[t.value]) sets[t.value].push(t);
       else sets[t.value] = [t];
     }
-    return [set for each(set in sets) if(set.length > 1)];
+    return sets.filter(s => set.length > 1);
   }
 }
 
@@ -145,12 +145,14 @@ Tile.prototype = {
 }
 
 
-function irange(N) {
-  for(var i = 0; i < N; ++i) yield i;
+function range(N) {
+  const rv = Array(N);
+  for(let i = 0; i < N; ++i) rv[i] = i;
+  return rv;
 }
 
 function allFilled(tiles) {
-  for each(var t in tiles) if(!t.isFilled) return false;
+  for(let t of tiles) if(!t.isFilled) return false;
   return true;
 }
 
@@ -160,9 +162,9 @@ function createGrid(templateArray) {
   const all = []; // all tiles
   const d = ta.length, h = ta[0].length, w = ta[0][0].length;
   function maketile(x, y, z) { return ta[z][y][x] ? (all[all.length] = new Tile(x, y, z)) : null; }
-  const grid = [[[maketile(x, y, z) for(x in irange(w))] for(y in irange(h))] for(z in irange(d))];
+  const grid = range(d).map(z => range(h).map(y => range(w).map(x => maketile(x, y, z))));
   // set up the tiles' .left etc. fields.  don't use for-in because it gives indices as strings
-  for each(var t in all) {
+  for(let t of all) {
     // a full tile's width to the left, and optionally up or down half a tile's height
     _recordTileAsAdjacent(grid, t, 'left', 'numRightBlockers', -2, -1, 0);
     _recordTileAsAdjacent(grid, t, 'left', 'numRightBlockers', -2,  0, 0);
@@ -209,7 +211,7 @@ function fillGrid(alltiles) {
   // and the filling can happen from either side.
   while(values.length) {
     var value = values.pop();
-    var fillable = [t for each(t in alltiles) if(t.isFillable)];
+    var fillable = alltiles.filter(t => t.isFillable);
     if(!fillable.length) return false;
     // select a tile to fill
     var tile1 = fillable[randomInt(fillable.length)];
@@ -218,7 +220,7 @@ function fillGrid(alltiles) {
     // Remove no-longer-fillable tiles (often most members of tile1's lattice).
     // Don't regenerate the list from scratch, because that could include tiles
     // which can be filled, but not with tile1's pair (eg. those on top of it).
-    fillable = [t for each(t in fillable) if(t.isFillable)];
+    fillable = fillable.filter(t => t.isFillable)
     if(!fillable.length) return null;
     // if the tile is the first in its lattice to be filled, it can legally be
     // paired with one of its adjacents
@@ -243,19 +245,19 @@ function fillTile(tile, value) {
 function markNotLeftFillable(tile) {
   if(tile.tilesFilledToLeft) return;
   tile.tilesFilledToLeft = true;
-  for each(var l in tile.left) markNotLeftFillable(l);
+  for(let l of tile.left) markNotLeftFillable(l);
 }
 
 function markNotRightFillable(tile) {
   if(tile.tilesFilledToRight) return;
   tile.tilesFilledToRight = true;
-  for each(var r in tile.right) markNotRightFillable(r);
+  for(let r of tile.right) markNotRightFillable(r);
 }
 
 
 function getTileValues(num) {
   if(num % 4) throw "the number of tiles isn't a multiple of 4";
-  var values = [i for each(i in irange(num / 4))];
+  const values = range(num / 4);
   // double them up because we add tiles in pairs, not fours
   return shuffle(Array.concat(values, values));
 }

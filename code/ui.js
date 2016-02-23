@@ -19,7 +19,7 @@ const ui = {
     this._contexts = []; // nsIDOMCanvasRenderingContext2D
     const images = document.getElementById("html_img_elements");
     // the |if| skips over the whitespace text nodes
-    for each(var el in images.childNodes) if(el.id) this._images[el.id] = el;
+    for(let el of images.childNodes) if(el.id) this._images[el.id] = el;
   },
 
   // pass a z-y-x indexed array of Tile objects and nulls
@@ -88,7 +88,7 @@ const ui = {
   },
   _rects: function(tiles, colour) {
     if(!tiles) return;
-    for each(var t in tiles) this._rect(t, kUiHighlightLayerOffset, colour);
+    for(let t of tiles) this._rect(t, kUiHighlightLayerOffset, colour);
   },
   _hintTiles: [],
 
