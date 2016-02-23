@@ -17,18 +17,17 @@ function delayed_onload() {
 
 function buildLayoutPicker() {
   const block = document.getElementById("layoutpicker");
-  const xhtml = "http://www.w3.org/1999/xhtml";
   // A temporary canvas used to draw previews of the layouts
-  const canvas = document.createElementNS(xhtml, "canvas");
+  const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   for(var id in layouts._gridTemplates) {
     var template = layouts._gridTemplates[id];
-    // using xhtml because xul:button has a XBL hbox that makes layout difficult
-    var btn = document.createElementNS(xhtml, "button");
+    var btn = document.createElement("a");
     btn.className = "layoutbutton";
-    var img = document.createElementNS(xhtml, "img");
+    var img = document.createElement("img");
     img.src = _renderLayoutPreview(template, ctx);
     btn.layout_id = id;
+    btn.onclick = function(ev) { ev.preventDefault(); selectLayout(this.layout_id); };
     btn.appendChild(img);
     btn.appendChild(document.createTextNode(id));
     block.appendChild(btn);
@@ -67,11 +66,10 @@ function showLayoutPicker() {
   document.getElementById("layoutpicker").className = "";
 }
 
-function selectLayout(event) {
-  if(event.target.localName != "button") return;
+function selectLayout(layout_id) {
   document.getElementById("layoutpicker").className = "hidden";;
   document.getElementById("gamearea").hidden = false;
-  gLayoutId = event.target.layout_id;
+  gLayoutId = layout_id;
   newGame();
 }
 

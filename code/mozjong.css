@@ -1,3 +1,7 @@
+body {
+  font-family: sans-serif;
+}
+
 .hidden {
   display: none !important;
 }
@@ -11,14 +15,18 @@
   color: black;
 }
 
-/* basically want a file-manager-like grid of tiles */
 .layoutbutton {
-  border: none !important;
-  margin: none !important;
+  display: inline-block;
+  vertical-align: top;
   width: 12em !important;
   padding: 1em;
   background: white;
   color: black;
+}
+
+.layoutbutton img {
+  display: block;
+  margin-bottom: 5px;
 }
 
 .layoutbutton:hover {
