@@ -215,7 +215,6 @@ function fillGrid(alltiles) {
     if(!fillable.length) return false;
     // select a tile to fill
     var tile1 = fillable[randomInt(fillable.length)];
-    dump("chose tile1 "+tile1+" from "+fillable+"\n");
     fillTile(tile1, value);
     // Remove no-longer-fillable tiles (often most members of tile1's lattice).
     // Don't regenerate the list from scratch, because that could include tiles
@@ -228,7 +227,6 @@ function fillGrid(alltiles) {
       fillable = Array.concat(fillable, tile1.left, tile1.right);
     // select a second tile, and actually fill them both
     var tile2 = fillable[randomInt(fillable.length)];
-    dump("chose tile2 "+tile2+" from "+fillable+"\n");
     fillTile(tile2, value);
   }
   return true;
