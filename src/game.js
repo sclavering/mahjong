@@ -1,8 +1,7 @@
 function Game(templateGrid) {
   this._history = [];
   [this.grid, this.alltiles] = createGrid(templateGrid);
-  // keep trying to fill until successful
-  while(!fillGrid(this.alltiles)) for(let t of this.alltiles) t.reset();
+  GridFiller.run(this.alltiles);
 }
 
 Game.prototype = {
@@ -130,15 +129,6 @@ Tile.prototype = {
     return !this.numAboveBlockers && (!this.numLeftBlockers || !this.numRightBlockers);
   },
   toString: function() { return this.tileid; },
-  get isFillable() {
-    return !this.isFilled && allFilled(this.below) && (
-      // either this is the first tile in its lattice to be filled
-      (!this.tilesFilledToRight && !this.tilesFilledToLeft)
-      // or if the lattice has been partly filled:
-      || allFilled(this.left)
-      || allFilled(this.right)
-    );
-  },
   reset: function() {
     this.tilesFilledToRight = this.tilesFilledToLeft = this.isFilled = false;
   }
@@ -149,11 +139,6 @@ function range(N) {
   const rv = Array(N);
   for(let i = 0; i < N; ++i) rv[i] = i;
   return rv;
-}
-
-function allFilled(tiles) {
-  for(let t of tiles) if(!t.isFilled) return false;
-  return true;
 }
 
 // Template is a z-y-x indexed array of bools indicating tile positions
@@ -198,59 +183,71 @@ function _recordTileAsAdjacent(grid, tile, listFieldName, countFieldName, dx, dy
 }
 
 
-// Creates a game that is winnable (in at least one way) by repeatedly adding
-// pairs to the empty grid.  The tiles are actually in a grid already, and this
-// function just assigns them values.
-// Returns true if successful, and false if it runs out of fillable tiles. This
-// can happen even with correct layouts, e.g. if it gets to the point where the
-// only two unfilled tiles are one on top of the other.  The caller should thus
-// try again.
-function fillGrid(alltiles) {
-  const values = getTileValues(alltiles.length);
-  // Initially, only tiles which are not on top of another tile may be filled,
-  // and the filling can happen from either side.
-  while(values.length) {
-    var value = values.pop();
-    var fillable = alltiles.filter(t => t.isFillable);
-    if(!fillable.length) return false;
-    // select a tile to fill
-    var tile1 = fillable[randomInt(fillable.length)];
-    fillTile(tile1, value);
-    // Remove no-longer-fillable tiles (often most members of tile1's lattice).
-    // Don't regenerate the list from scratch, because that could include tiles
-    // which can be filled, but not with tile1's pair (eg. those on top of it).
-    fillable = fillable.filter(t => t.isFillable)
-    if(!fillable.length) return null;
-    // if the tile is the first in its lattice to be filled, it can legally be
-    // paired with one of its adjacents
-    if(!tile1.tilesFilledToLeft && !tile1.tilesFilledToRight)
-      fillable = Array.concat(fillable, tile1.left, tile1.right);
-    // select a second tile, and actually fill them both
-    var tile2 = fillable[randomInt(fillable.length)];
-    fillTile(tile2, value);
-  }
-  return true;
-}
+const GridFiller = {
+  // Creates a game that is winnable (in at least one way).  The tiles are actually in a grid already, and this function just assigns them values.
+  run: function(alltiles) {
+    // ._run_once() can fail, e.g. if it gets to the point where the only two unfilled tiles are one on top of the other
+    while(!this._run_once(alltiles)) for(let t of alltiles) t.reset();
+  },
 
-function fillTile(tile, value) {
-  tile.value = value;
-  tile.isFilled = true;
-  markNotLeftFillable(tile);
-  markNotRightFillable(tile);
-  return tile;
-}
+  _run_once: function(alltiles) {
+    const values = getTileValues(alltiles.length);
+    // Initially, only tiles which are not on top of another tile may be filled, and the filling can happen from either side.
+    while(values.length) {
+      let value = values.pop();
+      let fillable = alltiles.filter(t => this._is_tile_fillable(t));
+      if(!fillable.length) return false;
+      let tile1 = fillable[randomInt(fillable.length)];
+      this._fill_tile(tile1, value);
+      // Remove no-longer-fillable tiles (often most members of tile1's lattice).
+      // Don't regenerate the list from scratch, because that could include tiles which can be filled, but not with tile1's pair (eg. those on top of it).
+      fillable = fillable.filter(t => this._is_tile_fillable(t));
+      if(!fillable.length) return null;
+      // If the tile is the first in its lattice to be filled, it can legally be paired with one of its adjacents
+      if(!tile1.tilesFilledToLeft && !tile1.tilesFilledToRight) fillable = Array.concat(fillable, tile1.left, tile1.right);
+      // Select a second tile, and actually fill them both.
+      let tile2 = fillable[randomInt(fillable.length)];
+      this._fill_tile(tile2, value);
+    }
+    return true;
+  },
 
-function markNotLeftFillable(tile) {
-  if(tile.tilesFilledToLeft) return;
-  tile.tilesFilledToLeft = true;
-  for(let l of tile.left) markNotLeftFillable(l);
-}
+  _fill_tile: function(tile, value) {
+    tile.value = value;
+    tile.isFilled = true;
+    this._mark_not_left_fillable(tile);
+    this._mark_not_right_fillable(tile);
+    return tile;
+  },
 
-function markNotRightFillable(tile) {
-  if(tile.tilesFilledToRight) return;
-  tile.tilesFilledToRight = true;
-  for(let r of tile.right) markNotRightFillable(r);
-}
+  _mark_not_left_fillable: function(tile) {
+    if(tile.tilesFilledToLeft) return;
+    tile.tilesFilledToLeft = true;
+    for(let l of tile.left) this._mark_not_left_fillable(l);
+  },
+
+  _mark_not_right_fillable: function(tile) {
+    if(tile.tilesFilledToRight) return;
+    tile.tilesFilledToRight = true;
+    for(let r of tile.right) this._mark_not_right_fillable(r);
+  },
+
+  _is_tile_fillable: function(tile) {
+    return !tile.isFilled && this._all_filled(tile.below) && (
+      // either this is the first tile in its lattice to be filled
+      (!tile.tilesFilledToRight && !tile.tilesFilledToLeft)
+      // or if the lattice has been partly filled:
+      || this._all_filled(tile.left)
+      || this._all_filled(tile.right)
+    );
+  },
+
+  _all_filled: function(tiles) {
+    for(let t of tiles) if(!t.isFilled) return false;
+    return true;
+  },
+};
+
 
 
 function getTileValues(num) {
