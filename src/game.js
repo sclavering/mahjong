@@ -106,24 +106,13 @@ function Tile(x, y, z) {
   this.right = [];
   this.below = [];
   this.tilesAbove = [];
-
-  // Used when setting the tiles' values to give a winnable grid ("filling" it)
-  this.isFilled = false; // xxx could just do !isNaN(tile.value)
-  // true iff any of a recursive traversal of .right have .isFilled set true.
-  // Implies that this tile can now only be filled when all its .right tiles
-  // have all been filled.
-  this.tilesFilledToRight = false;
-  this.tilesFilledToLeft = false;
 }
 Tile.prototype = {
   get isFree() {
     return this.tilesAbove.every(t => t.is_removed) && (this.left.every(t => t.is_removed) || this.right.every(t => t.is_removed));
   },
   toString: function() { return this.tileid; },
-  reset: function() {
-    this.tilesFilledToRight = this.tilesFilledToLeft = this.isFilled = false;
-  }
-}
+};
 
 
 function range(N) {
@@ -175,17 +164,23 @@ function _record_tile_as_adjacent(grid, tile, listFieldName, dx, dy, dz) {
 
 const GridFiller = {
   // Creates a game that is winnable (in at least one way).  The tiles are actually in a grid already, and this function just assigns them values.
-  run: function(alltiles) {
+  run: function(tiles) {
     // ._run_once() can fail, e.g. if it gets to the point where the only two unfilled tiles are one on top of the other
-    while(!this._run_once(alltiles)) for(let t of alltiles) t.reset();
+    while(!this._run_once(tiles)) {}
   },
 
-  _run_once: function(alltiles) {
-    const values = getTileValues(alltiles.length);
+  _run_once: function(tiles) {
+    const values = getTileValues(tiles.length);
+    tiles.forEach(t => t.filling_state = {
+      is_filled: false,
+      // True iff any of a recursive traversal of .right have .filling_state.is_filled set true.  Implies that this tile can now only be filled when all its .right tiles have all been filled.
+      tiles_filled_to_right: false,
+      tiles_filled_to_left: false,
+    });
     // Initially, only tiles which are not on top of another tile may be filled, and the filling can happen from either side.
     while(values.length) {
       let value = values.pop();
-      let fillable = alltiles.filter(t => this._is_tile_fillable(t));
+      let fillable = tiles.filter(t => this._is_tile_fillable(t));
       if(!fillable.length) return false;
       let tile1 = fillable[randomInt(fillable.length)];
       this._fill_tile(tile1, value);
@@ -194,38 +189,39 @@ const GridFiller = {
       fillable = fillable.filter(t => this._is_tile_fillable(t));
       if(!fillable.length) return null;
       // If the tile is the first in its lattice to be filled, it can legally be paired with one of its adjacents
-      if(!tile1.tilesFilledToLeft && !tile1.tilesFilledToRight) fillable = Array.concat(fillable, tile1.left, tile1.right);
+      if(!tile1.filling_state.tiles_filled_to_left && !tile1.filling_state.tiles_filled_to_right) fillable = Array.concat(fillable, tile1.left, tile1.right);
       // Select a second tile, and actually fill them both.
       let tile2 = fillable[randomInt(fillable.length)];
       this._fill_tile(tile2, value);
     }
+    tiles.forEach(t => t.filling_state = null);
     return true;
   },
 
   _fill_tile: function(tile, value) {
     tile.value = value;
-    tile.isFilled = true;
+    tile.filling_state.is_filled = true;
     this._mark_not_left_fillable(tile);
     this._mark_not_right_fillable(tile);
     return tile;
   },
 
   _mark_not_left_fillable: function(tile) {
-    if(tile.tilesFilledToLeft) return;
-    tile.tilesFilledToLeft = true;
+    if(tile.filling_state.tiles_filled_to_left) return;
+    tile.filling_state.tiles_filled_to_left = true;
     for(let l of tile.left) this._mark_not_left_fillable(l);
   },
 
   _mark_not_right_fillable: function(tile) {
-    if(tile.tilesFilledToRight) return;
-    tile.tilesFilledToRight = true;
+    if(tile.filling_state.tiles_filled_to_right) return;
+    tile.filling_state.tiles_filled_to_right = true;
     for(let r of tile.right) this._mark_not_right_fillable(r);
   },
 
   _is_tile_fillable: function(tile) {
-    return !tile.isFilled && this._all_filled(tile.below) && (
+    return !tile.filling_state.is_filled && this._all_filled(tile.below) && (
       // either this is the first tile in its lattice to be filled
-      (!tile.tilesFilledToRight && !tile.tilesFilledToLeft)
+      (!tile.filling_state.tiles_filled_to_right && !tile.filling_state.tiles_filled_to_left)
       // or if the lattice has been partly filled:
       || this._all_filled(tile.left)
       || this._all_filled(tile.right)
@@ -233,7 +229,7 @@ const GridFiller = {
   },
 
   _all_filled: function(tiles) {
-    for(let t of tiles) if(!t.isFilled) return false;
+    for(let t of tiles) if(!t.filling_state.is_filled) return false;
     return true;
   },
 };
