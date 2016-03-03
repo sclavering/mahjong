@@ -70,7 +70,9 @@ const ui = {
     var [x, y] = this._getTileVisualCoords(tile);
     const ctx2 = this._contexts[tile.z * 2 + 1];
     ctx2.clearRect(x, y, kTileWidth, kTileHeight);
-    ctx2.drawImage(this._images["tile-" + tile.value], x, y);
+    // the +1 is because the first tile image is blank
+    // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+    ctx2.drawImage(this._images["tiles"], 0, (tile.value + 1) * kTileHeight, kTileWidth, kTileHeight, x, y, kTileWidth, kTileHeight);
     // draw an extra border, since the tiles lack left borders
     ctx2.fillStyle = "black";
     ctx2.strokeRect(x + 0.5, y + 0.5, kTileWidth - 1, kTileHeight - 1);
