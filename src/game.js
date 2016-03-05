@@ -47,18 +47,13 @@ Game.prototype = {
     tile.is_removed = false;
   },
 
-  // Returns the tile with (x,y,z) as its top-left corner
-  _getTileAt: function(x, y, z) {
-    const g = this.grid;
-    return (g[z] && g[z][y] && g[z][y][x]) || null;
-  },
-
   // Returns a tile given the grid coords of any of its corners
   getTileAt: function(x, y, z) {
-    return this._getTileAt(x, y, z) || this._getTileAt(x, y - 1, z)
-        || this._getTileAt(x - 1, y, z) || this._getTileAt(x - 1, y - 1, z);
+    const layer = this.grid[z] || null;
+    if(!layer) return null;
+    return (layer[y - 1] ? layer[y - 1][x - 1] || layer[y - 1][x] : null)
+        || (layer[y] ? layer[y][x - 1] || layer[y][x] : null);
   },
-
 
   // returns an array of two or more pairable tiles
   getHint: function() {
