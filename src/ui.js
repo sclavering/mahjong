@@ -138,7 +138,7 @@ const ui = {
       var x = Math.floor(pixelX / kTileHalfWidth);
       var y = Math.floor(pixelY / kTileHalfHeight);
       var tile = game.getTileAt(x, y, z);
-      if(!tile) continue;
+      if(!tile || tile.is_removed) continue;
       if(tile.isFree) {
         if(tile == this._selected) this._select(null);
         else if(!game.doRemovePair(tile, this._selected)) this._select(tile);

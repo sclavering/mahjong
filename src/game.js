@@ -37,13 +37,11 @@ Game.prototype = {
 
   _removeTile: function(tile) {
     this._clearHints();
-    this.grid[tile.z][tile.y][tile.x] = null;
     tile.is_removed = true;
   },
 
   _unremoveTile: function(tile) {
     this._clearHints();
-    this.grid[tile.z][tile.y][tile.x] = tile;
     tile.is_removed = false;
   },
 
