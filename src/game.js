@@ -70,7 +70,7 @@ Game.prototype = {
   _hints: null,
 
   _computeHints: function() {
-    const tiles = this.alltiles.filter(t => t.isFree);
+    const tiles = this.alltiles.filter(t => !t.is_removed && t.isFree);
     const sets = [];
     for(let t of tiles) {
       if(sets[t.value]) sets[t.value].push(t);
